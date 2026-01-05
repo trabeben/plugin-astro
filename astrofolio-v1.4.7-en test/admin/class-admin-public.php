@@ -774,8 +774,16 @@ class Astro_Admin_Public {
             <div class="shortcode-examples">
                 <div class="shortcode-example">
                     <h3>[astrofolio_gallery]</h3>
-                    <p>Affiche la galerie d'images d'astrophotographie</p>
-                    <code>[astrofolio_gallery columns="3" limit="12" show_titles="true"]</code>
+                    <p>Affiche la galerie d'images d'astrophotographie avec pagination</p>
+                    <code>[astrofolio_gallery columns="3" limit="12" show_titles="true" show_pagination="true"]</code>
+                    <p><strong>Paramètres disponibles :</strong></p>
+                    <ul>
+                        <li><strong>limit</strong> : nombre d'images par page (défaut: 12)</li>
+                        <li><strong>columns</strong> : nombre de colonnes (défaut: 3)</li>
+                        <li><strong>show_titles</strong> : afficher les titres (true/false)</li>
+                        <li><strong>show_pagination</strong> : afficher le bouton "Charger plus" (true/false)</li>
+                        <li><strong>size</strong> : taille des images (thumbnail/medium/large)</li>
+                    </ul>
                 </div>
                 
                 <div class="shortcode-example">

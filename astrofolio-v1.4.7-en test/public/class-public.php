@@ -656,55 +656,101 @@ class Astro_Public {
     }
     
     public function load_more_images() {
-        check_ajax_referer('astro_public_nonce', 'nonce');
+        // Debug: Log des données reçues
+        error_log('ASTRO DEBUG - load_more_images appelée avec: ' . print_r($_POST, true));
         
-        $page = max(1, intval($_POST['page']));
-        $per_page = get_option('astro_images_per_page', 12);
+        // Vérification du nonce plus souple
+        if (!wp_verify_nonce($_POST['nonce'], 'astro_public_nonce')) {
+            error_log('ASTRO ERROR - Nonce invalide: ' . $_POST['nonce']);
+            wp_send_json_error(array('message' => 'Nonce invalide'));
+            return;
+        }
         
-        $filters = array(
-            'status' => 'published',
-            'limit' => $per_page,
-            'offset' => ($page - 1) * $per_page
+        $page = max(1, intval($_POST['page'] ?? 1));
+        $limit = intval($_POST['limit'] ?? get_option('astro_images_per_page', 12));
+        $offset = ($page - 1) * $limit;
+        
+        error_log("ASTRO DEBUG - Page: $page, Limit: $limit, Offset: $offset");
+        
+        // Utiliser la même méthode que le shortcode pour récupérer les images
+        $args = array(
+            'post_type' => 'attachment',
+            'post_mime_type' => 'image',
+            'post_status' => 'inherit',
+            'posts_per_page' => $limit,
+            'offset' => $offset,
+            'meta_query' => array(
+                'relation' => 'OR',
+                array(
+                    'key' => 'astro_object_name',
+                    'compare' => 'EXISTS'
+                ),
+                array(
+                    'key' => 'astro_shooting_date',
+                    'compare' => 'EXISTS'
+                ),
+                array(
+                    'key' => 'astro_telescope',
+                    'compare' => 'EXISTS'
+                ),
+                array(
+                    'key' => 'astro_camera',
+                    'compare' => 'EXISTS'
+                ),
+                array(
+                    'key' => '_astrofolio_image',
+                    'compare' => 'EXISTS'
+                )
+            ),
+            'orderby' => 'date',
+            'order' => 'DESC'
         );
         
-        $images = Astro_Images::search_images($filters);
+        $images = get_posts($args);
+        error_log('ASTRO DEBUG - Images trouvées: ' . count($images));
         
         if (empty($images)) {
             wp_send_json_error(array('message' => 'Plus d\'images à charger'));
+            return;
         }
         
         ob_start();
         foreach ($images as $image) {
-            // Renderiser les cartes d'images
+            $image_id = $image->ID;
+            $title = get_the_title($image_id) ?: 'Image d\'astrophotographie';
+            $image_url = wp_get_attachment_image_src($image_id, 'medium')[0];
+            
+            // Créer l'URL de détail
+            $detail_page_id = get_option('astrofolio_detail_page');
+            if ($detail_page_id && get_post($detail_page_id)) {
+                $detail_url = get_permalink($detail_page_id) . '?image_id=' . $image_id;
+            } else {
+                $detail_url = '/astrofolio/image/' . $image_id;
+            }
+            
+            // Utiliser le même style que le shortcode
             ?>
-            <div class="astro-image-card">
-                <a href="/astro/image/<?php echo $image->id; ?>">
-                    <?php if ($image->thumbnail_url): ?>
-                        <img src="<?php echo esc_url($image->thumbnail_url); ?>" alt="<?php echo esc_attr($image->title); ?>" />
-                    <?php else: ?>
-                        <div class="astro-no-image">📷</div>
-                    <?php endif; ?>
+            <div style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 10px; text-align: center;">
+                <a href="<?php echo esc_url($detail_url); ?>" style="display: block; text-decoration: none; color: inherit;">
+                    <img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr($title); ?>" style="width: 100%; height: 200px; object-fit: cover; border-radius: 4px; margin-bottom: 10px; cursor: pointer; transition: transform 0.2s ease;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                    <div style="font-size: 14px; font-weight: bold; color: #333;"><?php echo esc_html($title); ?></div>
                 </a>
-                
-                <div class="astro-image-info">
-                    <h3><a href="/astro/image/<?php echo $image->id; ?>"><?php echo esc_html($image->title); ?></a></h3>
-                    <p><a href="/astro/object/<?php echo urlencode($image->object_name); ?>"><?php echo esc_html($image->object_name); ?></a></p>
-                    
-                    <div class="astro-image-meta">
-                        <span>👁 <?php echo number_format($image->views ?? 0); ?></span>
-                        <?php if (get_option('astro_enable_likes', 1)): ?>
-                            <span>❤ <?php echo number_format($image->likes ?? 0); ?></span>
-                        <?php endif; ?>
-                    </div>
-                </div>
             </div>
             <?php
         }
         $html = ob_get_clean();
         
+        // Vérifier s'il y a encore plus d'images
+        $args['posts_per_page'] = 1;
+        $args['offset'] = $offset + $limit;
+        $next_images = get_posts($args);
+        $has_more = !empty($next_images);
+        
+        error_log('ASTRO DEBUG - HTML généré: ' . strlen($html) . ' caractères, has_more: ' . ($has_more ? 'true' : 'false'));
+        
         wp_send_json_success(array(
             'html' => $html,
-            'has_more' => count($images) === $per_page
+            'has_more' => $has_more
         ));
     }
     

@@ -3,6 +3,51 @@
 > Plugin WordPress de gestion d'images d'astrophotographie
 > 
 > **Auteur** : Benoist Degonne  
+> **Status actuel** : v1.4.7-STABLE ✅ **(VERSION VALIDÉE)**
+
+---
+
+## 🎉 v1.4.7-STABLE (5 janvier 2026) ✅ **VERSION OFFICIELLEMENT VALIDÉE**
+
+### 🎯 **Problème Principal Résolu**
+- **FIX CRITIQUE** : Erreur 500 sur la page de détail d'image (`/astrofolio-detail/?image_id=XXX`)
+- **Cause** : Utilisation d'API défaillante `Astro_Images::get_image()` au lieu des fonctions WordPress standard  
+- **Solution** : Remplacement par `get_post()` et `wp_get_attachment_image_url()`
+
+### ✅ **Nouvelles Fonctionnalités**
+- **Métadonnées complètes** : Affichage de TOUTES les métadonnées disponibles dans l'admin AstroFolio
+- **Interface moderne** : Grille responsive organisée par sections thématiques
+- **Gestion N.C.** : Affichage "N.C." (Non Communiqué) pour les champs vides
+- **Auto-nettoyage** : Suppression automatique du contenu de debug des pages
+
+### 🔧 **Améliorations Techniques**  
+- Code de debug complètement désactivé en production
+- Support des anciens et nouveaux formats de métadonnées
+- CSS intégré pour mise en forme moderne
+- Vérifications robustes des données d'entrée
+- Compatible WordPress 6.9
+
+### 📊 **Sections de Métadonnées Ajoutées**
+1. **🌟 Objet céleste** : nom, coordonnées, champ de vue, échelle pixel
+2. **🔭 Télescope** : marque/modèle, diamètre, focale, rapport f/D  
+3. **⚙️ Monture & Caméra** : détails complets, capteur, refroidissement, filtres
+4. **📷 Acquisition** : poses lumière, ISO/Gain, binning, calibration
+5. **🌍 Lieu & Conditions** : observation, Bortle, météo, seeing, lune
+6. **💻 Traitement** : logiciels, étapes, techniques spéciales
+7. **🚀 Configuration avancée** : guidage, capture, techniques
+
+### 🧹 **Nettoyage Effectué**
+- Désactivation des shortcodes `[astrofolio_version]`, `[astrofolio_test]`, `[astro_debug*]`
+- Suppression des `console.log()` en production  
+- Nettoyage automatique du contenu des pages existantes
+- Code commenté pour réactivation future si besoin debug
+
+### ⚡ **Performance**
+- Chargement plus rapide (moins de code debug)
+- Requêtes optimisées vers la base WordPress
+- CSS minifié intégré
+
+---
 > **Site** : https://photos-et-nature.com/astrofolio
 
 ---

@@ -222,20 +222,39 @@ class AstroFolio_Safe {
         // Shortcode pour affichage détaillé d'une image
         add_shortcode('astrofolio_image_detail', array($this, 'image_detail_shortcode'));
         
+        // Shortcode de test simple pour vérifier que les shortcodes fonctionnent
+        // add_shortcode('astrofolio_test', array($this, 'test_shortcode')); // DÉSACTIVÉ
+        
+        // Shortcode pour afficher la version active du plugin
+        // add_shortcode('astrofolio_version', array($this, 'version_shortcode')); // DÉSACTIVÉ
+        
         // =================================================================
         // SHORTCODES DE DEBUG - Uniquement pour les administrateurs
         // =================================================================
         
         // Shortcode de debug général (seulement si paramètre GET astro_debug)
         if (current_user_can('manage_options') && isset($_GET['astro_debug'])) {
-            add_shortcode('astro_debug', array($this, 'debug_shortcode'));
+            // add_shortcode('astro_debug', array($this, 'debug_shortcode')); // DÉSACTIVÉ
         }
         
         // Shortcodes de debug et récupération d'images
-        add_shortcode('astro_debug_images', array($this, 'debug_images_shortcode'));
-        add_shortcode('astro_recover_images', array($this, 'recover_images_shortcode'));
-        add_shortcode('astro_test_recovery', array($this, 'test_recovery_shortcode'));
-        add_shortcode('astro_simple_test', array($this, 'simple_test_shortcode'));
+        // add_shortcode('astro_debug_images', array($this, 'debug_images_shortcode')); // DÉSACTIVÉ
+        // add_shortcode('astro_recover_images', array($this, 'recover_images_shortcode')); // DÉSACTIVÉ
+        // add_shortcode('astro_test_recovery', array($this, 'test_recovery_shortcode')); // DÉSACTIVÉ
+        // add_shortcode('astro_simple_test', array($this, 'simple_test_shortcode')); // DÉSACTIVÉ
+        // add_shortcode('astro_test_ajax', array($this, 'test_ajax_shortcode')); // DÉSACTIVÉ - Test AJAX
+        
+        // =================================================================
+        // AJAX HANDLERS - Fonctionnalités interactives
+        // =================================================================
+        
+        // Pagination AJAX pour "Charger plus d'images"
+        add_action('wp_ajax_astro_load_more_images', array($this, 'ajax_load_more_images'));
+        add_action('wp_ajax_nopriv_astro_load_more_images', array($this, 'ajax_load_more_images'));
+        
+        // Système de likes pour les images
+        add_action('wp_ajax_astro_like_image', array($this, 'ajax_like_image'));
+        add_action('wp_ajax_nopriv_astro_like_image', array($this, 'ajax_like_image'));
         
         // =================================================================
         // FILTRES WORDPRESS - Personnalisation du comportement
@@ -4720,6 +4739,12 @@ class AstroFolio_Safe {
             }
         }
         
+        // Récupérer les données de base depuis la table astro_images
+        $image_data = Astro_Images::get_image($image_id);
+        if (!$image_data) {
+            return array();
+        }
+        
         // S'assurer que la table existe
         $this->create_metadata_table();
         
@@ -4729,87 +4754,74 @@ class AstroFolio_Safe {
             $image_id
         ));
         
-        // Aussi récupérer les métadonnées de base depuis post_meta (toujours les plus récentes)
-        $object_name = get_post_meta($image_id, 'astro_object_name', true);
-        $shooting_date = get_post_meta($image_id, 'astro_shooting_date', true);
-        $coordinates = get_post_meta($image_id, 'astro_coordinates', true);
-        $telescope = get_post_meta($image_id, 'astro_telescope', true);
-        $camera = get_post_meta($image_id, 'astro_camera', true);
-        
         $metadata = array();
         
+        // Utiliser les données de la table astro_images comme base
+        $metadata = array(
+            // Objet céleste - essayer plusieurs sources
+            'object_name' => $image_data->object_designation ?: ($image_data->object_names ?: ''),
+            'acquisition_dates' => $image_data->acquisition_date ?: '',
+            
+            // Équipement depuis la table astro_images
+            'telescope_brand' => '',
+            'telescope_model' => $image_data->telescope ?: '',
+            'telescope_aperture' => $image_data->telescope_aperture ?: '',
+            'telescope_focal_length' => $image_data->telescope_focal_length ?: '',
+            'telescope_focal_ratio' => '',
+            'camera_brand' => '',
+            'camera_model' => $image_data->camera_name ?: '',
+            'camera_sensor' => '',
+            'camera_cooling' => $image_data->camera_cooling ?: '',
+            'mount_brand' => '',
+            'mount_model' => $image_data->mount_name ?: '',
+            'filters' => $image_data->filters ?: '',
+            'reducer_corrector' => $image_data->reducer_flattener ?: '',
+            'guiding_camera' => $image_data->guide_camera ?: '',
+            'guiding_scope' => $image_data->guide_scope ?: '',
+            
+            // Acquisition
+            'location_name' => $image_data->location ?: '',
+            'location_coords' => ($image_data->latitude && $image_data->longitude) ? $image_data->latitude . ',' . $image_data->longitude : '',
+            'location_altitude' => '',
+            'lights_count' => $image_data->number_of_subs ?: '',
+            'lights_exposure' => $image_data->sub_exposure_time ?: '',
+            'lights_iso_gain' => $image_data->iso_gain ?: '',
+            'filter_details' => $image_data->filter_data ?: '',
+            'darks_count' => $image_data->darks_count ?: '',
+            'flats_count' => $image_data->flats_count ?: '',
+            'bias_count' => $image_data->bias_count ?: '',
+            'capture_software' => $image_data->acquisition_software ?: '',
+            'autoguiding' => $image_data->guiding_software ?: '',
+            
+            // Conditions
+            'weather_conditions' => '',
+            'temperature' => $image_data->temperature ?: '',
+            'humidity' => '',
+            'wind_speed' => '',
+            'bortle_scale' => $image_data->bortle_scale ?: '',
+            'seeing' => $image_data->seeing ?: '',
+            'moon_illumination' => $image_data->moon_phase ?: '',
+            
+            // Traitement
+            'stacking_software' => '',
+            'processing_software' => $image_data->processing_software ?: '',
+            'preprocessing_steps' => '',
+            'processing_steps' => '',
+            'special_techniques' => '',
+            'final_resolution' => '',
+            'pixel_scale' => $image_data->pixel_scale ?: '',
+            'field_of_view' => ($image_data->fov_width && $image_data->fov_height) ? $image_data->fov_width . '° x ' . $image_data->fov_height . '°' : '',
+            'processing_notes' => '',
+            'acquisition_notes' => ''
+        );
+        
+        // Si on a des métadonnées étendues dans la table astro_image_metadata, les fusionner
         if ($metadata_row) {
-            $metadata = array(
-                // Objet céleste
-                'object_name' => $object_name ?: '',
-                'acquisition_dates' => $shooting_date ?: '',
-                
-                // Équipement
-                'telescope_brand' => $metadata_row->telescope_brand ?: '',
-                'telescope_model' => $metadata_row->telescope_model ?: '',
-                'telescope_aperture' => $metadata_row->telescope_aperture ?: '',
-                'telescope_focal_length' => $metadata_row->telescope_focal_length ?: '',
-                'telescope_focal_ratio' => $metadata_row->telescope_focal_ratio ?: '',
-                'camera_brand' => $metadata_row->camera_brand ?: '',
-                'camera_model' => $metadata_row->camera_model ?: '',
-                'camera_sensor' => $metadata_row->camera_sensor ?: '',
-                'camera_cooling' => $metadata_row->camera_cooling ?: '',
-                'mount_brand' => $metadata_row->mount_brand ?: '',
-                'mount_model' => $metadata_row->mount_model ?: '',
-                'filters' => $metadata_row->filters ?: '',
-                'reducer_corrector' => $metadata_row->reducer_corrector ?: '',
-                'guiding_camera' => $metadata_row->guiding_camera ?: '',
-                'guiding_scope' => $metadata_row->guiding_scope ?: '',
-                
-                // Acquisition
-                'location_name' => $metadata_row->location_name ?: '',
-                'location_coords' => $metadata_row->location_coords ?: '',
-                'location_altitude' => $metadata_row->location_altitude ?: '',
-                'lights_count' => $metadata_row->lights_count ?: '',
-                'lights_exposure' => $metadata_row->lights_exposure ?: '',
-                'lights_iso_gain' => $metadata_row->lights_iso_gain ?: '',
-                'filter_details' => $metadata_row->filter_details ?: '',
-                'darks_count' => $metadata_row->darks_count ?: '',
-                'flats_count' => $metadata_row->flats_count ?: '',
-                'bias_count' => $metadata_row->bias_count ?: '',
-                'capture_software' => $metadata_row->capture_software ?: '',
-                'autoguiding' => $metadata_row->autoguiding ?: '',
-                
-                // Conditions
-                'weather_conditions' => $metadata_row->weather_conditions ?: '',
-                'temperature' => $metadata_row->temperature ?: '',
-                'humidity' => $metadata_row->humidity ?: '',
-                'wind_speed' => $metadata_row->wind_speed ?: '',
-                'bortle_scale' => $metadata_row->bortle_scale ?: '',
-                'seeing' => $metadata_row->seeing ?: '',
-                'moon_illumination' => $metadata_row->moon_illumination ?: '',
-                
-                // Traitement
-                'stacking_software' => $metadata_row->stacking_software ?: '',
-                'processing_software' => $metadata_row->processing_software ?: '',
-                'preprocessing_steps' => $metadata_row->preprocessing_steps ?: '',
-                'processing_steps' => $metadata_row->processing_steps ?: '',
-                'special_techniques' => $metadata_row->special_techniques ?: '',
-                'final_resolution' => $metadata_row->final_resolution ?: '',
-                'pixel_scale' => $metadata_row->pixel_scale ?: '',
-                'field_of_view' => $metadata_row->field_of_view ?: '',
-                'processing_notes' => $metadata_row->processing_notes ?: '',
-                'acquisition_notes' => $metadata_row->acquisition_notes ?: ''
-            );
-        } else {
-            // Fallback sur les métadonnées de base
-            $metadata = array(
-                'object_name' => $object_name ?: '',
-                'acquisition_dates' => $shooting_date ?: '',
-                'telescope_brand' => '',
-                'camera_brand' => '',
-                'lights_exposure' => '',
-                'location_name' => '',
-                'lights_count' => '',
-                'lights_iso_gain' => '',
-                'stacking_software' => '',
-                'processing_software' => '',
-            );
+            foreach ($metadata_row as $key => $value) {
+                if ($key !== 'id' && $key !== 'image_id' && !empty($value)) {
+                    $metadata[$key] = $value;
+                }
+            }
         }
         
         // Mettre en cache le résultat (mais pas trop longtemps)
@@ -4995,7 +5007,8 @@ class AstroFolio_Safe {
             'columns' => get_option('astro_default_columns', 3),
             'size' => get_option('astro_image_quality', 'medium'),
             'show_metadata' => get_option('astro_show_metadata', 1) ? 'true' : 'false',
-            'show_titles' => 'true' // Toujours afficher les titres
+            'show_titles' => 'true', // Toujours afficher les titres
+            'show_pagination' => 'true' // Afficher la pagination par défaut
         ), $atts);
         
         ob_start();
@@ -5656,6 +5669,9 @@ class AstroFolio_Safe {
     
     // Shortcode pour la page de détail d'une image (intégré dans le thème)
     public function image_detail_shortcode($atts) {
+        // Auto-nettoyage du contenu de la page si nécessaire
+        $this->clean_detail_page_content();
+        
         $image_id = isset($_GET['image_id']) ? intval($_GET['image_id']) : 0;
         
         if (!$image_id) {
@@ -5665,109 +5681,449 @@ class AstroFolio_Safe {
                     </div>';
         }
         
+        // Utiliser get_post pour récupérer l'image depuis les attachements WordPress
         $image = get_post($image_id);
-        if (!$image) {
+        
+        if (!$image || $image->post_type !== 'attachment') {
             return '<div class="astro-error">
-                        <p><strong>❌ Erreur :</strong> Image non trouvée.</p>
+                        <p><strong>❌ Erreur :</strong> Image non trouvée (ID: ' . $image_id . ').</p>
                         <a href="/🌟-astrofolio-galerie/" class="button">← Retour à la galerie</a>
                     </div>';
         }
         
-        // Récupérer les métadonnées avec notre fonction corrigée
-        $metadata = $this->get_image_metadata($image_id);
-        
-        // Enqueue des scripts/styles
-        $this->enqueue_public_scripts();
-        
-        // URLs et données de base
+        // URLs de l'image
         $image_url = wp_get_attachment_image_url($image_id, 'large');
         $full_image_url = wp_get_attachment_image_url($image_id, 'full');
-        $current_url = get_permalink() . '?image_id=' . $image_id;
         
-        // Description optimisée pour SEO
-        $description = $this->generate_seo_description($image->post_title, $metadata);
-        
-        // Ajouter les métadonnées dans le head
-        add_action('wp_head', function() use ($image, $metadata, $image_url, $current_url, $description) {
-            $this->add_seo_meta_tags($image, $metadata, $image_url, $current_url, $description);
-        });
+        if (!$image_url) {
+            return '<div class="astro-error">
+                        <p><strong>❌ Erreur :</strong> URL de l\'image non trouvée.</p>
+                        <a href="/🌟-astrofolio-galerie/" class="button">← Retour à la galerie</a>
+                    </div>';
+        }
         
         $output = '';
         
-        // JSON-LD Structured Data
-        $output .= $this->generate_json_ld_schema($image, $metadata, $image_url, $full_image_url, $current_url);
+        // Article principal
+        $output .= '<article class="astro-image-detail">';
         
-        // Article principal avec structure sémantique
-        $output .= '<article class="astro-image-detail" itemscope itemtype="https://schema.org/Photograph">';
-        
-        // En-tête sémantique
+        // En-tête
         $output .= '<header class="detail-header">';
-        $output .= '<h1 class="image-title" itemprop="name">' . esc_html($image->post_title) . '</h1>';
-        $output .= '<nav class="detail-nav" aria-label="Navigation">';
-        $output .= '<a href="/🌟-astrofolio-galerie/" class="button button-secondary" rel="up">← Retour à la galerie</a>';
+        $output .= '<h1 class="image-title">' . esc_html($image->post_title) . '</h1>';
+        $output .= '<nav class="detail-nav">';
+        $output .= '<a href="/🌟-astrofolio-galerie/" class="button button-secondary">← Retour à la galerie</a>';
         $output .= '</nav>';
         $output .= '</header>';
         
-        // Image principale avec métadonnées sémantiques
-        $output .= '<figure class="main-image" itemprop="image" itemscope itemtype="https://schema.org/ImageObject">';
-        
-        $alt_text = $this->generate_alt_text($image->post_title, $metadata);
-        $output .= '<a href="' . esc_url($full_image_url) . '" class="lightbox-trigger" itemprop="contentUrl">';
-        $output .= wp_get_attachment_image($image_id, 'large', false, array(
-            'class' => 'detail-image',
-            'alt' => $alt_text,
-            'title' => esc_attr($image->post_title),
-            'itemprop' => 'url'
-        ));
-        $output .= '<div class="image-overlay" aria-hidden="true">';
+        // Image principale
+        $output .= '<figure class="main-image">';
+        $output .= '<a href="' . esc_url($full_image_url) . '" class="lightbox-trigger">';
+        $output .= '<img src="' . esc_url($image_url) . '" alt="' . esc_attr($image->post_title) . '" class="detail-image" />';
+        $output .= '<div class="image-overlay">';
         $output .= '<span class="zoom-icon">🔍 Cliquer pour agrandir</span>';
         $output .= '</div>';
         $output .= '</a>';
-        
-        // Caption sémantique
-        if (!empty($metadata['object_name'])) {
-            $output .= '<figcaption itemprop="caption">';
-            $output .= 'Photographie astronomique de ' . esc_html($metadata['object_name']);
-            if (!empty($metadata['acquisition_dates'])) {
-                $output .= ' prise le ' . esc_html($metadata['acquisition_dates']);
-            }
-            $output .= '</figcaption>';
-        }
         $output .= '</figure>';
         
-        // Section des métadonnées techniques
-        $output .= '<section class="metadata-section" aria-labelledby="tech-details">';
-        $output .= '<h2 id="tech-details">Détails techniques de la photographie</h2>';
-        
-        if (!empty($metadata) && array_filter($metadata)) {
-            $output .= $this->render_seo_optimized_metadata($metadata);
-        } else {
-            $output .= '<p class="no-metadata">Aucune métadonnée technique disponible pour cette image.</p>';
+        // Description basique si disponible
+        if (!empty($image->post_content)) {
+            $output .= '<div class="image-description">';
+            $output .= '<h2>Description</h2>';
+            $output .= '<p>' . wp_kses_post($image->post_content) . '</p>';
+            $output .= '</div>';
         }
         
+        // Métadonnées EXIF basiques si disponibles
+        $metadata = wp_get_attachment_metadata($image_id);
+        if (!empty($metadata)) {
+            $output .= '<section class="technical-details">';
+            $output .= '<h2>Informations techniques</h2>';
+            $output .= '<ul>';
+            
+            if (isset($metadata['width']) && isset($metadata['height'])) {
+                $output .= '<li><strong>Dimensions :</strong> ' . $metadata['width'] . ' × ' . $metadata['height'] . ' pixels</li>';
+            }
+            
+            if (isset($metadata['filesize'])) {
+                $output .= '<li><strong>Taille :</strong> ' . size_format($metadata['filesize']) . '</li>';
+            }
+            
+            if (isset($metadata['image_meta'])) {
+                $exif = $metadata['image_meta'];
+                
+                if (!empty($exif['camera'])) {
+                    $output .= '<li><strong>Appareil :</strong> ' . esc_html($exif['camera']) . '</li>';
+                }
+                
+                if (!empty($exif['focal_length'])) {
+                    $output .= '<li><strong>Focale :</strong> ' . esc_html($exif['focal_length']) . ' mm</li>';
+                }
+                
+                if (!empty($exif['aperture'])) {
+                    $output .= '<li><strong>Ouverture :</strong> f/' . esc_html($exif['aperture']) . '</li>';
+                }
+                
+                if (!empty($exif['shutter_speed'])) {
+                    $output .= '<li><strong>Vitesse :</strong> ' . esc_html($exif['shutter_speed']) . ' s</li>';
+                }
+                
+                if (!empty($exif['iso'])) {
+                    $output .= '<li><strong>ISO :</strong> ' . esc_html($exif['iso']) . '</li>';
+                }
+                
+                if (!empty($exif['created_timestamp'])) {
+                    $date = date('d/m/Y H:i', $exif['created_timestamp']);
+                    $output .= '<li><strong>Date de prise :</strong> ' . $date . '</li>';
+                }
+            }
+            
+            $output .= '</ul>';
+            $output .= '</section>';
+        }
+        
+        // Métadonnées AstroFolio spécifiques - TOUTES LES MÉTADONNÉES DISPONIBLES
+        $output .= '<section class="astro-metadata">';
+        $output .= '<h2>Données astronomiques complètes</h2>';
+        
+        // Récupérer TOUTES les métadonnées personnalisées AstroFolio
+        $astro_meta = array(
+            // Informations de base
+            'object_name' => get_post_meta($image_id, 'astro_object_name', true),
+            'shooting_date' => get_post_meta($image_id, 'astro_shooting_date', true),
+            'description' => get_post_meta($image_id, 'astro_description', true),
+            
+            // Équipement - Télescope
+            'telescope_brand' => get_post_meta($image_id, 'astro_telescope_brand', true),
+            'telescope_model' => get_post_meta($image_id, 'astro_telescope_model', true),
+            'telescope_aperture' => get_post_meta($image_id, 'astro_telescope_aperture', true),
+            'telescope_focal_length' => get_post_meta($image_id, 'astro_telescope_focal_length', true),
+            'telescope_focal_ratio' => get_post_meta($image_id, 'astro_telescope_focal_ratio', true),
+            'telescope' => get_post_meta($image_id, 'astro_telescope', true), // Champ combiné legacy
+            
+            // Équipement - Monture
+            'mount_brand' => get_post_meta($image_id, 'astro_mount_brand', true),
+            'mount_model' => get_post_meta($image_id, 'astro_mount_model', true),
+            
+            // Équipement - Caméra
+            'camera_brand' => get_post_meta($image_id, 'astro_camera_brand', true),
+            'camera_model' => get_post_meta($image_id, 'astro_camera_model', true),
+            'camera_sensor' => get_post_meta($image_id, 'astro_camera_sensor', true),
+            'camera_cooling' => get_post_meta($image_id, 'astro_camera_cooling', true),
+            'camera' => get_post_meta($image_id, 'astro_camera', true), // Champ combiné legacy
+            
+            // Équipement - Filtres et accessoires
+            'filters' => get_post_meta($image_id, 'astro_filters', true),
+            'accessories' => get_post_meta($image_id, 'astro_accessories', true),
+            
+            // Acquisition - Poses lumière
+            'lights_count' => get_post_meta($image_id, 'astro_lights_count', true),
+            'lights_exposure' => get_post_meta($image_id, 'astro_lights_exposure', true),
+            'lights_iso_gain' => get_post_meta($image_id, 'astro_lights_iso_gain', true),
+            'lights_binning' => get_post_meta($image_id, 'astro_lights_binning', true),
+            'exposure_time' => get_post_meta($image_id, 'astro_exposure_time', true), // Legacy
+            'iso_gain' => get_post_meta($image_id, 'astro_iso_gain', true), // Legacy
+            'number_of_frames' => get_post_meta($image_id, 'astro_number_of_frames', true), // Legacy
+            
+            // Acquisition - Détails par filtre
+            'filter_details' => get_post_meta($image_id, 'astro_filter_details', true),
+            
+            // Acquisition - Calibration
+            'darks_count' => get_post_meta($image_id, 'astro_darks_count', true),
+            'darks_exposure' => get_post_meta($image_id, 'astro_darks_exposure', true),
+            'flats_count' => get_post_meta($image_id, 'astro_flats_count', true),
+            'bias_count' => get_post_meta($image_id, 'astro_bias_count', true),
+            
+            // Acquisition - Dates
+            'acquisition_dates' => get_post_meta($image_id, 'astro_acquisition_dates', true),
+            
+            // Traitement
+            'stacking_software' => get_post_meta($image_id, 'astro_stacking_software', true),
+            'processing_software' => get_post_meta($image_id, 'astro_processing_software', true),
+            'processing_steps' => get_post_meta($image_id, 'astro_processing_steps', true),
+            'special_techniques' => get_post_meta($image_id, 'astro_special_techniques', true),
+            'processing_notes' => get_post_meta($image_id, 'astro_processing_notes', true),
+            
+            // Conditions - Lieu
+            'location_name' => get_post_meta($image_id, 'astro_location_name', true),
+            'location_coords' => get_post_meta($image_id, 'astro_location_coords', true),
+            'location_altitude' => get_post_meta($image_id, 'astro_location_altitude', true),
+            'location' => get_post_meta($image_id, 'astro_location', true), // Legacy
+            
+            // Conditions - Qualité du ciel
+            'bortle_scale' => get_post_meta($image_id, 'astro_bortle_scale', true),
+            'weather_conditions' => get_post_meta($image_id, 'astro_weather_conditions', true),
+            'temperature' => get_post_meta($image_id, 'astro_temperature', true),
+            'humidity' => get_post_meta($image_id, 'astro_humidity', true),
+            'wind_speed' => get_post_meta($image_id, 'astro_wind_speed', true),
+            'seeing' => get_post_meta($image_id, 'astro_seeing', true),
+            'moon_illumination' => get_post_meta($image_id, 'astro_moon_illumination', true),
+            
+            // Avancé - Guidage
+            'guiding_camera' => get_post_meta($image_id, 'astro_guiding_camera', true),
+            'guiding_scope' => get_post_meta($image_id, 'astro_guiding_scope', true),
+            'autoguiding' => get_post_meta($image_id, 'astro_autoguiding', true),
+            
+            // Avancé - Logiciels et techniques
+            'capture_software' => get_post_meta($image_id, 'astro_capture_software', true),
+            'dithering' => get_post_meta($image_id, 'astro_dithering', true),
+            'focusing' => get_post_meta($image_id, 'astro_focusing', true),
+            'plate_solving' => get_post_meta($image_id, 'astro_plate_solving', true),
+            
+            // Avancé - Résultat final
+            'final_resolution' => get_post_meta($image_id, 'astro_final_resolution', true),
+            'field_of_view' => get_post_meta($image_id, 'astro_field_of_view', true),
+            'pixel_scale' => get_post_meta($image_id, 'astro_pixel_scale', true),
+            
+            // Champs supplémentaires possibles
+            'coordinates' => get_post_meta($image_id, 'astro_coordinates', true),
+            'exposure_details' => get_post_meta($image_id, 'astro_exposure_details', true),
+            'observation_location' => get_post_meta($image_id, 'astro_observation_location', true),
+            'sky_conditions' => get_post_meta($image_id, 'astro_sky_conditions', true),
+        );
+        
+        // Affichage par sections organisées
+        $output .= '<div class="astro-metadata-grid">';
+        
+        // === OBJET ET COORDONNÉES ===
+        $output .= '<div class="metadata-section">';
+        $output .= '<h3>🌟 Objet céleste</h3>';
+        $output .= '<table class="astro-table">';
+        $output .= '<tr><td><strong>Nom de l\'objet :</strong></td><td>' . (!empty($astro_meta['object_name']) ? esc_html($astro_meta['object_name']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Coordonnées :</strong></td><td>' . (!empty($astro_meta['coordinates']) ? esc_html($astro_meta['coordinates']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Champ de vue :</strong></td><td>' . (!empty($astro_meta['field_of_view']) ? esc_html($astro_meta['field_of_view']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Échelle pixel :</strong></td><td>' . (!empty($astro_meta['pixel_scale']) ? esc_html($astro_meta['pixel_scale']) . ' arcsec/pixel' : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '</table>';
+        $output .= '</div>';
+        
+        // === ÉQUIPEMENT - TÉLESCOPE ===
+        $output .= '<div class="metadata-section">';
+        $output .= '<h3>🔭 Télescope</h3>';
+        $output .= '<table class="astro-table">';
+        
+        // Télescope (legacy ou détaillé)
+        if (!empty($astro_meta['telescope'])) {
+            $output .= '<tr><td><strong>Télescope :</strong></td><td>' . esc_html($astro_meta['telescope']) . '</td></tr>';
+        } else {
+            $telescope_full = trim(($astro_meta['telescope_brand'] ?? '') . ' ' . ($astro_meta['telescope_model'] ?? ''));
+            $output .= '<tr><td><strong>Marque/Modèle :</strong></td><td>' . (!empty($telescope_full) ? esc_html($telescope_full) : '<em>N.C.</em>') . '</td></tr>';
+        }
+        
+        $output .= '<tr><td><strong>Diamètre :</strong></td><td>' . (!empty($astro_meta['telescope_aperture']) ? esc_html($astro_meta['telescope_aperture']) . ' mm' : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Focale :</strong></td><td>' . (!empty($astro_meta['telescope_focal_length']) ? esc_html($astro_meta['telescope_focal_length']) . ' mm' : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Rapport f/D :</strong></td><td>' . (!empty($astro_meta['telescope_focal_ratio']) ? esc_html($astro_meta['telescope_focal_ratio']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '</table>';
+        $output .= '</div>';
+        
+        // === ÉQUIPEMENT - MONTURE ET CAMÉRA ===
+        $output .= '<div class="metadata-section">';
+        $output .= '<h3>⚙️ Monture & Caméra</h3>';
+        $output .= '<table class="astro-table">';
+        
+        // Monture
+        $mount_full = trim(($astro_meta['mount_brand'] ?? '') . ' ' . ($astro_meta['mount_model'] ?? ''));
+        $output .= '<tr><td><strong>Monture :</strong></td><td>' . (!empty($mount_full) ? esc_html($mount_full) : '<em>N.C.</em>') . '</td></tr>';
+        
+        // Caméra (legacy ou détaillée)
+        if (!empty($astro_meta['camera'])) {
+            $output .= '<tr><td><strong>Caméra :</strong></td><td>' . esc_html($astro_meta['camera']) . '</td></tr>';
+        } else {
+            $camera_full = trim(($astro_meta['camera_brand'] ?? '') . ' ' . ($astro_meta['camera_model'] ?? ''));
+            $output .= '<tr><td><strong>Caméra :</strong></td><td>' . (!empty($camera_full) ? esc_html($camera_full) : '<em>N.C.</em>') . '</td></tr>';
+        }
+        
+        $output .= '<tr><td><strong>Capteur :</strong></td><td>' . (!empty($astro_meta['camera_sensor']) ? esc_html($astro_meta['camera_sensor']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Refroidissement :</strong></td><td>' . (!empty($astro_meta['camera_cooling']) ? esc_html($astro_meta['camera_cooling']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Filtres :</strong></td><td>' . (!empty($astro_meta['filters']) ? esc_html($astro_meta['filters']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Accessoires :</strong></td><td>' . (!empty($astro_meta['accessories']) ? wp_kses_post($astro_meta['accessories']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '</table>';
+        $output .= '</div>';
+        
+        // === ACQUISITION ===
+        $output .= '<div class="metadata-section">';
+        $output .= '<h3>📷 Acquisition</h3>';
+        $output .= '<table class="astro-table">';
+        
+        // Poses lumière (essayer nouveau format puis legacy)
+        $exposure_text = '';
+        if (!empty($astro_meta['lights_count']) && !empty($astro_meta['lights_exposure'])) {
+            $exposure_text = $astro_meta['lights_count'] . ' × ' . $astro_meta['lights_exposure'] . 's';
+        } elseif (!empty($astro_meta['number_of_frames']) && !empty($astro_meta['exposure_time'])) {
+            $exposure_text = $astro_meta['number_of_frames'] . ' × ' . $astro_meta['exposure_time'];
+        } elseif (!empty($astro_meta['exposure_details'])) {
+            $exposure_text = $astro_meta['exposure_details'];
+        }
+        $output .= '<tr><td><strong>Poses lumière :</strong></td><td>' . (!empty($exposure_text) ? esc_html($exposure_text) : '<em>N.C.</em>') . '</td></tr>';
+        
+        // ISO/Gain
+        $iso_gain = $astro_meta['lights_iso_gain'] ?? $astro_meta['iso_gain'] ?? '';
+        $output .= '<tr><td><strong>ISO/Gain :</strong></td><td>' . (!empty($iso_gain) ? esc_html($iso_gain) : '<em>N.C.</em>') . '</td></tr>';
+        
+        $output .= '<tr><td><strong>Binning :</strong></td><td>' . (!empty($astro_meta['lights_binning']) ? esc_html($astro_meta['lights_binning']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Détail par filtre :</strong></td><td>' . (!empty($astro_meta['filter_details']) ? wp_kses_post($astro_meta['filter_details']) : '<em>N.C.</em>') . '</td></tr>';
+        
+        // Calibration
+        $darks_text = '';
+        if (!empty($astro_meta['darks_count']) && !empty($astro_meta['darks_exposure'])) {
+            $darks_text = $astro_meta['darks_count'] . ' × ' . $astro_meta['darks_exposure'] . 's';
+        }
+        $output .= '<tr><td><strong>Darks :</strong></td><td>' . (!empty($darks_text) ? esc_html($darks_text) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Flats :</strong></td><td>' . (!empty($astro_meta['flats_count']) ? esc_html($astro_meta['flats_count']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Bias :</strong></td><td>' . (!empty($astro_meta['bias_count']) ? esc_html($astro_meta['bias_count']) : '<em>N.C.</em>') . '</td></tr>';
+        
+        // Dates
+        $dates = $astro_meta['acquisition_dates'] ?? $astro_meta['shooting_date'] ?? '';
+        $output .= '<tr><td><strong>Date(s) d\'acquisition :</strong></td><td>' . (!empty($dates) ? esc_html($dates) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '</table>';
+        $output .= '</div>';
+        
+        // === CONDITIONS D'OBSERVATION ===
+        $output .= '<div class="metadata-section">';
+        $output .= '<h3>🌍 Lieu & Conditions</h3>';
+        $output .= '<table class="astro-table">';
+        
+        // Lieu
+        $location = $astro_meta['location_name'] ?? $astro_meta['location'] ?? '';
+        $output .= '<tr><td><strong>Lieu d\'observation :</strong></td><td>' . (!empty($location) ? esc_html($location) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Coordonnées lieu :</strong></td><td>' . (!empty($astro_meta['location_coords']) ? esc_html($astro_meta['location_coords']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Altitude :</strong></td><td>' . (!empty($astro_meta['location_altitude']) ? esc_html($astro_meta['location_altitude']) . ' m' : '<em>N.C.</em>') . '</td></tr>';
+        
+        // Conditions
+        $bortle_text = '';
+        if (!empty($astro_meta['bortle_scale'])) {
+            $bortle_text = 'Classe ' . $astro_meta['bortle_scale'];
+        }
+        $output .= '<tr><td><strong>Échelle de Bortle :</strong></td><td>' . (!empty($bortle_text) ? esc_html($bortle_text) : '<em>N.C.</em>') . '</td></tr>';
+        
+        $weather = $astro_meta['weather_conditions'] ?? $astro_meta['sky_conditions'] ?? '';
+        $output .= '<tr><td><strong>Conditions météo :</strong></td><td>' . (!empty($weather) ? esc_html($weather) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Température :</strong></td><td>' . (!empty($astro_meta['temperature']) ? esc_html($astro_meta['temperature']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Humidité :</strong></td><td>' . (!empty($astro_meta['humidity']) ? esc_html($astro_meta['humidity']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Vent :</strong></td><td>' . (!empty($astro_meta['wind_speed']) ? esc_html($astro_meta['wind_speed']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Seeing :</strong></td><td>' . (!empty($astro_meta['seeing']) ? esc_html($astro_meta['seeing']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Lune :</strong></td><td>' . (!empty($astro_meta['moon_illumination']) ? esc_html($astro_meta['moon_illumination']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '</table>';
+        $output .= '</div>';
+        
+        // === TRAITEMENT ===
+        $output .= '<div class="metadata-section">';
+        $output .= '<h3>💻 Traitement</h3>';
+        $output .= '<table class="astro-table">';
+        $output .= '<tr><td><strong>Logiciel empilement :</strong></td><td>' . (!empty($astro_meta['stacking_software']) ? esc_html($astro_meta['stacking_software']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Logiciel traitement :</strong></td><td>' . (!empty($astro_meta['processing_software']) ? esc_html($astro_meta['processing_software']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Étapes principales :</strong></td><td>' . (!empty($astro_meta['processing_steps']) ? wp_kses_post($astro_meta['processing_steps']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Techniques spéciales :</strong></td><td>' . (!empty($astro_meta['special_techniques']) ? wp_kses_post($astro_meta['special_techniques']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Notes traitement :</strong></td><td>' . (!empty($astro_meta['processing_notes']) ? wp_kses_post($astro_meta['processing_notes']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '</table>';
+        $output .= '</div>';
+        
+        // === GUIDAGE ET LOGICIELS ===
+        $output .= '<div class="metadata-section">';
+        $output .= '<h3>🚀 Configuration avancée</h3>';
+        $output .= '<table class="astro-table">';
+        $output .= '<tr><td><strong>Logiciel capture :</strong></td><td>' . (!empty($astro_meta['capture_software']) ? esc_html($astro_meta['capture_software']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Caméra guidage :</strong></td><td>' . (!empty($astro_meta['guiding_camera']) ? esc_html($astro_meta['guiding_camera']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Lunette guidage :</strong></td><td>' . (!empty($astro_meta['guiding_scope']) ? esc_html($astro_meta['guiding_scope']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Autoguidage :</strong></td><td>' . (!empty($astro_meta['autoguiding']) ? wp_kses_post($astro_meta['autoguiding']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Dithering :</strong></td><td>' . (!empty($astro_meta['dithering']) ? esc_html($astro_meta['dithering']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Mise au point :</strong></td><td>' . (!empty($astro_meta['focusing']) ? esc_html($astro_meta['focusing']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Résolution de champ :</strong></td><td>' . (!empty($astro_meta['plate_solving']) ? esc_html($astro_meta['plate_solving']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '<tr><td><strong>Résolution finale :</strong></td><td>' . (!empty($astro_meta['final_resolution']) ? esc_html($astro_meta['final_resolution']) : '<em>N.C.</em>') . '</td></tr>';
+        $output .= '</table>';
+        $output .= '</div>';
+        
+        // Description si présente
+        if (!empty($astro_meta['description'])) {
+            $output .= '<div class="metadata-section full-width">';
+            $output .= '<h3>📝 Description</h3>';
+            $output .= '<div class="description-content">' . wp_kses_post($astro_meta['description']) . '</div>';
+            $output .= '</div>';
+        }
+        
+        $output .= '</div>'; // .astro-metadata-grid
         $output .= '</section>';
         
-        // Breadcrumb sémantique
-        $output .= '<nav aria-label="Fil d\'Ariane" class="breadcrumb">';
-        $output .= '<ol itemscope itemtype="https://schema.org/BreadcrumbList">';
-        $output .= '<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">';
-        $output .= '<a itemprop="item" href="/"><span itemprop="name">Accueil</span></a>';
-        $output .= '<meta itemprop="position" content="1" />';
-        $output .= '</li>';
-        $output .= '<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">';
-        $output .= '<a itemprop="item" href="/🌟-astrofolio-galerie/"><span itemprop="name">Galerie Astro</span></a>';
-        $output .= '<meta itemprop="position" content="2" />';
-        $output .= '</li>';
-        $output .= '<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">';
-        $output .= '<span itemprop="name">' . esc_html($image->post_title) . '</span>';
-        $output .= '<meta itemprop="position" content="3" />';
-        $output .= '</li>';
-        $output .= '</ol>';
-        $output .= '</nav>';
+        // CSS pour la mise en forme
+        $output .= '<style>
+        .astro-metadata-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .metadata-section {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 4px solid #0073aa;
+        }
+        .metadata-section h3 {
+            margin: 0 0 10px 0;
+            color: #0073aa;
+            font-size: 16px;
+        }
+        .astro-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .astro-table td {
+            padding: 5px 8px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        .astro-table td:first-child {
+            width: 40%;
+            font-weight: 500;
+        }
+        .metadata-section.full-width {
+            grid-column: 1 / -1;
+        }
+        .description-content {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            line-height: 1.6;
+        }
+        </style>';
         
         $output .= '</article>';
         
         return $output;
+    }
+    
+    // Fonction de nettoyage automatique du contenu de la page de détail
+    private function clean_detail_page_content() {
+        static $cleaned = false;
+        if ($cleaned) return;
+        
+        // Rechercher la page de détail
+        $pages = get_posts(array(
+            'post_type' => 'page',
+            'post_status' => 'publish',
+            'meta_query' => array(
+                array(
+                    'key' => '_astrofolio_detail_page',
+                    'value' => '1'
+                )
+            ),
+            'numberposts' => 1
+        ));
+        
+        if (!empty($pages)) {
+            $page = $pages[0];
+            // Vérifier si le contenu contient du debug
+            if (strpos($page->post_content, 'astrofolio_version') !== false || 
+                strpos($page->post_content, 'TEST DEBUG') !== false ||
+                strpos($page->post_content, 'astrofolio_test') !== false) {
+                
+                // Nettoyer le contenu - ne garder que le shortcode principal
+                wp_update_post(array(
+                    'ID' => $page->ID,
+                    'post_content' => '[astrofolio_image_detail]'
+                ));
+            }
+        }
+        
+        $cleaned = true;
     }
     
     // Shortcode pour afficher les statistiques
@@ -5810,6 +6166,218 @@ class AstroFolio_Safe {
         return ob_get_clean();
     }
     
+    // Shortcode de test AJAX
+    public function test_ajax_shortcode($atts) {
+        if (!current_user_can('manage_options')) {
+            return '<p><em>Accès restreint aux administrateurs</em></p>';
+        }
+        
+        $ajax_url = admin_url('admin-ajax.php');
+        $nonce = wp_create_nonce('astro_public_nonce');
+        
+        wp_enqueue_script('jquery');
+        
+        return '<div style="background: #f0f0f0; padding: 20px; margin: 20px 0; border-radius: 8px;">
+            <h3>🔧 Test de Pagination AJAX</h3>
+            <button id="test-ajax-btn" data-ajax-url="' . esc_url($ajax_url) . '" data-nonce="' . esc_attr($nonce) . '" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">Tester le chargement AJAX</button>
+            <div id="ajax-result" style="margin-top: 15px; padding: 10px; background: white; border-radius: 4px; display: none;"></div>
+            <script>
+            jQuery(document).ready(function($) {
+                $("#test-ajax-btn").on("click", function() {
+                    var button = $(this);
+                    var ajaxUrl = button.data("ajax-url");
+                    var nonce = button.data("nonce");
+                    var resultDiv = $("#ajax-result");
+                    
+                    button.text("Test en cours...").prop("disabled", true);
+                    resultDiv.show().html("⏳ Test de la connexion AJAX...");
+                    
+                    $.ajax({
+                        url: ajaxUrl,
+                        type: "POST",
+                        dataType: "json",
+                        data: {
+                            action: "astro_load_more_images",
+                            page: 1,
+                            limit: 3,
+                            nonce: nonce
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                resultDiv.html("✅ <strong>AJAX fonctionne !</strong><br>Images trouvées : " + (response.data.html ? "Oui" : "Aucune") + "<br>Plus d\'images disponibles : " + (response.data.has_more ? "Oui" : "Non"));
+                            } else {
+                                resultDiv.html("❌ <strong>Erreur serveur :</strong> " + (response.data.message || "Erreur inconnue"));
+                            }
+                            button.text("Tester le chargement AJAX").prop("disabled", false);
+                        },
+                        error: function(xhr, status, error) {
+                            resultDiv.html("🔥 <strong>Erreur de connexion :</strong> " + status + " - " + error + "<br><strong>Réponse serveur :</strong> " + xhr.responseText);
+                            button.text("Tester le chargement AJAX").prop("disabled", false);
+                        }
+                    });
+                });
+            });
+            </script>
+        </div>';
+    }
+    
+    // Shortcode de test simple pour vérifier que les shortcodes fonctionnent
+    public function test_shortcode($atts) {
+        return '<div style="background: red; color: white; padding: 20px; margin: 10px 0;">
+                    <h3>🔧 TEST SHORTCODE ASTROFOLIO</h3>
+                    <p>✅ Le shortcode fonctionne !</p>
+                    <p>URL actuelle: ' . esc_url($_SERVER['REQUEST_URI']) . '</p>
+                    <p>Paramètres GET: ' . esc_html(print_r($_GET, true)) . '</p>
+                    <p>Fichier plugin: ' . __FILE__ . '</p>
+                </div>';
+    }
+    
+    // Shortcode pour afficher la version active du plugin
+    public function version_shortcode($atts) {
+        return '<div style="background: blue; color: white; padding: 15px; margin: 10px 0;">
+                    <h4>📦 VERSION DU PLUGIN</h4>
+                    <p>Fichier: ' . __FILE__ . '</p>
+                    <p>Dossier: ' . dirname(__FILE__) . '</p>
+                    <p>Version: 1.4.7-en test</p>
+                    <p>Heure: ' . current_time('mysql') . '</p>
+                </div>';
+    }
+    
+    // =================================================================
+    // FONCTIONS AJAX - Gestion des interactions utilisateur
+    // =================================================================
+    
+    /**
+     * Fonction AJAX pour charger plus d'images dans la galerie
+     */
+    public function ajax_load_more_images() {
+        // Debug: Log des données reçues
+        error_log('ASTRO DEBUG - ajax_load_more_images appelée avec: ' . print_r($_POST, true));
+        
+        // Vérification du nonce
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'astro_public_nonce')) {
+            error_log('ASTRO ERROR - Nonce invalide: ' . ($_POST['nonce'] ?? 'vide'));
+            wp_send_json_error(array('message' => 'Nonce invalide'));
+            return;
+        }
+        
+        $page = max(1, intval($_POST['page'] ?? 1));
+        $limit = intval($_POST['limit'] ?? get_option('astro_images_per_page', 12));
+        $offset = ($page - 1) * $limit;
+        
+        error_log("ASTRO DEBUG - Page: $page, Limit: $limit, Offset: $offset");
+        
+        // Utiliser la même méthode que le shortcode pour récupérer les images
+        $args = array(
+            'post_type' => 'attachment',
+            'post_mime_type' => 'image',
+            'post_status' => 'inherit',
+            'posts_per_page' => $limit,
+            'offset' => $offset,
+            'meta_query' => array(
+                'relation' => 'OR',
+                array(
+                    'key' => 'astro_object_name',
+                    'compare' => 'EXISTS'
+                ),
+                array(
+                    'key' => 'astro_shooting_date',
+                    'compare' => 'EXISTS'
+                ),
+                array(
+                    'key' => 'astro_telescope',
+                    'compare' => 'EXISTS'
+                ),
+                array(
+                    'key' => 'astro_camera',
+                    'compare' => 'EXISTS'
+                ),
+                array(
+                    'key' => '_astrofolio_image',
+                    'compare' => 'EXISTS'
+                )
+            ),
+            'orderby' => 'date',
+            'order' => 'DESC'
+        );
+        
+        $images = get_posts($args);
+        error_log('ASTRO DEBUG - Images trouvées: ' . count($images));
+        
+        if (empty($images)) {
+            wp_send_json_error(array('message' => 'Plus d\'images à charger'));
+            return;
+        }
+        
+        ob_start();
+        foreach ($images as $image) {
+            $image_id = $image->ID;
+            $title = get_the_title($image_id) ?: 'Image d\'astrophotographie';
+            $image_url = wp_get_attachment_image_src($image_id, 'medium')[0];
+            
+            // Créer l'URL de détail
+            $detail_page_id = get_option('astrofolio_detail_page');
+            if ($detail_page_id && get_post($detail_page_id)) {
+                $detail_url = get_permalink($detail_page_id) . '?image_id=' . $image_id;
+            } else {
+                $detail_url = '/astrofolio/image/' . $image_id;
+            }
+            
+            // Utiliser le même style que le shortcode
+            ?>
+            <div style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 10px; text-align: center;">
+                <a href="<?php echo esc_url($detail_url); ?>" style="display: block; text-decoration: none; color: inherit;">
+                    <img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr($title); ?>" style="width: 100%; height: 200px; object-fit: cover; border-radius: 4px; margin-bottom: 10px; cursor: pointer; transition: transform 0.2s ease;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                    <div style="font-size: 14px; font-weight: bold; color: #333;"><?php echo esc_html($title); ?></div>
+                </a>
+            </div>
+            <?php
+        }
+        $html = ob_get_clean();
+        
+        // Vérifier s'il y a encore plus d'images
+        $args['posts_per_page'] = 1;
+        $args['offset'] = $offset + $limit;
+        $next_images = get_posts($args);
+        $has_more = !empty($next_images);
+        
+        error_log('ASTRO DEBUG - HTML généré: ' . strlen($html) . ' caractères, has_more: ' . ($has_more ? 'true' : 'false'));
+        
+        wp_send_json_success(array(
+            'html' => $html,
+            'has_more' => $has_more
+        ));
+    }
+    
+    /**
+     * Fonction AJAX pour gérer les likes d'images
+     */
+    public function ajax_like_image() {
+        if (!wp_verify_nonce($_POST['nonce'] ?? '', 'astro_public_nonce')) {
+            wp_send_json_error(array('message' => 'Nonce invalide'));
+            return;
+        }
+        
+        $image_id = intval($_POST['image_id'] ?? 0);
+        if (!$image_id) {
+            wp_send_json_error(array('message' => 'ID d\'image manquant'));
+            return;
+        }
+        
+        // Incrémenter le compteur de likes
+        $current_likes = get_post_meta($image_id, 'astro_likes', true) ?: 0;
+        $new_likes = intval($current_likes) + 1;
+        
+        if (update_post_meta($image_id, 'astro_likes', $new_likes)) {
+            wp_send_json_success(array(
+                'message' => 'Image aimée !',
+                'likes_count' => $new_likes
+            ));
+        } else {
+            wp_send_json_error(array('message' => 'Erreur lors de l\'ajout du like'));
+        }
+    }
+    
     // === FONCTIONS HELPER POUR LE SEO ===
     
     private function generate_seo_description($title, $metadata) {
@@ -5843,7 +6411,7 @@ class AstroFolio_Safe {
         
         // Open Graph
         echo '<meta property="og:type" content="article">' . "\n";
-        echo '<meta property="og:title" content="' . esc_attr($image->post_title) . '">' . "\n";
+        echo '<meta property="og:title" content="' . esc_attr($image->title) . '">' . "\n";
         echo '<meta property="og:description" content="' . esc_attr($description) . '">' . "\n";
         echo '<meta property="og:image" content="' . esc_url($image_url) . '">' . "\n";
         echo '<meta property="og:url" content="' . esc_url($current_url) . '">' . "\n";
@@ -5851,7 +6419,7 @@ class AstroFolio_Safe {
         
         // Twitter Cards
         echo '<meta name="twitter:card" content="summary_large_image">' . "\n";
-        echo '<meta name="twitter:title" content="' . esc_attr($image->post_title) . '">' . "\n";
+        echo '<meta name="twitter:title" content="' . esc_attr($image->title) . '">' . "\n";
         echo '<meta name="twitter:description" content="' . esc_attr($description) . '">' . "\n";
         echo '<meta name="twitter:image" content="' . esc_url($image_url) . '">' . "\n";
         
@@ -5859,7 +6427,7 @@ class AstroFolio_Safe {
         echo '<link rel="canonical" href="' . esc_url($current_url) . '">' . "\n";
         
         // Schema.org basic
-        echo '<meta itemprop="name" content="' . esc_attr($image->post_title) . '">' . "\n";
+        echo '<meta itemprop="name" content="' . esc_attr($image->title) . '">' . "\n";
         echo '<meta itemprop="description" content="' . esc_attr($description) . '">' . "\n";
         echo '<meta itemprop="image" content="' . esc_url($image_url) . '">' . "\n";
     }
@@ -5883,14 +6451,14 @@ class AstroFolio_Safe {
         $schema = array(
             '@context' => 'https://schema.org',
             '@type' => 'Photograph',
-            'name' => $image->post_title,
+            'name' => $image->title,
             'url' => $current_url,
             'contentUrl' => $full_image_url,
             'thumbnailUrl' => $image_url,
-            'dateCreated' => $image->post_date,
+            'dateCreated' => $image->acquisition_date ?: $image->created_at,
             'author' => array(
                 '@type' => 'Person',
-                'name' => get_the_author_meta('display_name', $image->post_author)
+                'name' => $image->author_name ?: 'Photographe inconnu'
             )
         );
         
@@ -6739,6 +7307,8 @@ class AstroFolio_Safe {
         $show_metadata = isset($atts['show_metadata']) ? 
             ($atts['show_metadata'] === 'true' || $atts['show_metadata'] === '1') : 
             get_option('astro_show_metadata', 1);
+        $show_pagination = isset($atts['show_pagination']) ?
+            ($atts['show_pagination'] === 'true' || $atts['show_pagination'] === '1') : true;
 
         $images = $this->get_astro_images();
         
@@ -6746,6 +7316,11 @@ class AstroFolio_Safe {
             return '<div style="background: #fff3cd; border: 1px solid #ffc107; padding: 20px; margin: 20px 0; border-radius: 8px;"><p>Aucune image d\'astrophotographie disponible.</p></div>';
         }
         
+        // Compter le nombre total d'images pour la pagination
+        $total_images = count($images);
+        $has_more = $total_images > $limit;
+        
+        // Afficher seulement les premières images selon la limite
         $images = array_slice($images, 0, $limit);
         
         // Créer un identifiant unique pour cette galerie
@@ -6780,7 +7355,81 @@ class AstroFolio_Safe {
         }
         
         $output .= '</div>';
-        $output .= '</div>';
+        
+        // Ajouter le bouton "Charger plus" si la pagination est activée et qu'il y a plus d'images
+        if ($show_pagination && $has_more) {
+            $gallery_id = 'astro-gallery-' . uniqid();
+            $ajax_url = admin_url('admin-ajax.php');
+            $nonce = wp_create_nonce('astro_public_nonce');
+            
+            $output .= '<div style="text-align: center; margin: 20px 0;">';
+            $output .= '<button id="load-more-' . $gallery_id . '" class="astro-load-more-btn" data-page="1" data-limit="' . $limit . '" data-ajax-url="' . esc_url($ajax_url) . '" data-nonce="' . esc_attr($nonce) . '" style="background: #0073aa; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; cursor: pointer; transition: background-color 0.3s ease;" onmouseover="this.style.backgroundColor=\'#005a87\'" onmouseout="this.style.backgroundColor=\'#0073aa\'">Charger plus d\'images</button>';
+            $output .= '</div>';
+            
+            // S'assurer que jQuery est chargé
+            wp_enqueue_script('jquery');
+            
+            $output .= '<script>
+            (function($) {
+                if (typeof $ === "undefined") {
+                    console.error("jQuery n\'est pas chargé");
+                    return;
+                }
+                
+                $(document).ready(function() {
+                    $("#load-more-' . $gallery_id . '").on("click", function(e) {
+                        e.preventDefault();
+                        
+                        var button = $(this);
+                        var page = parseInt(button.data("page")) + 1;
+                        var limit = parseInt(button.data("limit"));
+                        var ajaxUrl = button.data("ajax-url");
+                        var nonce = button.data("nonce");
+                        
+                        console.log("Chargement page:", page, "limit:", limit);
+                        
+                        button.text("Chargement...").prop("disabled", true);
+                        
+                        $.ajax({
+                            url: ajaxUrl,
+                            type: "POST",
+                            dataType: "json",
+                            data: {
+                                action: "astro_load_more_images",
+                                page: page,
+                                limit: limit,
+                                nonce: nonce
+                            },
+                            success: function(response) {
+                                console.log("Réponse AJAX:", response);
+                                if (response.success) {
+                                    var newImages = $(response.data.html);
+                                    button.parent().prev().append(newImages);
+                                    button.data("page", page);
+                                    
+                                    if (!response.data.has_more) {
+                                        button.hide();
+                                        button.parent().append("<p style=\\"color: #666; font-style: italic;\\">Toutes les images ont été chargées</p>");
+                                    } else {
+                                        button.text("Charger plus d\'images").prop("disabled", false);
+                                    }
+                                } else {
+                                    console.error("Erreur serveur:", response.data.message);
+                                    alert("Erreur lors du chargement des images: " + (response.data.message || "Erreur inconnue"));
+                                    button.text("Charger plus d\'images").prop("disabled", false);
+                                }
+                            },
+                            error: function(xhr, status, error) {
+                                console.error("Erreur AJAX:", status, error, xhr.responseText);
+                                alert("Erreur de connexion: " + status + " - " + error);
+                                button.text("Charger plus d\'images").prop("disabled", false);
+                            }
+                        });
+                    });
+                });
+            })(jQuery);
+            </script>';
+        }
         
         return $output;
     }
@@ -7009,11 +7658,8 @@ class AstroFolio_Safe {
     }
     
     public function activate() {
-        // Activation ultra-minimale pour éviter toute sortie
-        add_option('astrofolio_version', '1.4.3', '', 'no');
-        
-        // Ne rien faire d'autre lors de l'activation
-        // Les tables et pages seront créées au premier accès
+        // Activation simple - ne rien faire pour éviter les erreurs
+        add_option('astrofolio_version', '1.4.7', '', 'no');
     }
     
     // Créer les pages WordPress pour l'intégration dans le thème (version différée)
@@ -7042,19 +7688,25 @@ class AstroFolio_Safe {
             update_option('astrofolio_gallery_page', $gallery_page_id);
         }
         
-        // Page détail
+        // Page détail - FORCER LA RECRÉATION POUR DEBUG
         $detail_page_id = get_option('astrofolio_detail_page');
-        if (!$detail_page_id || !get_post($detail_page_id)) {
-            $detail_page = array(
-                'post_title' => '🌟 AstroFolio - Détail Image',
-                'post_content' => '[astrofolio_image_detail]',
-                'post_status' => 'publish',
-                'post_type' => 'page',
-                'post_slug' => 'astrofolio-detail'
-            );
-            $detail_page_id = wp_insert_post($detail_page);
-            update_option('astrofolio_detail_page', $detail_page_id);
+        $existing_page = get_post($detail_page_id);
+        
+        // Supprimer l'ancienne page si elle existe
+        if ($existing_page) {
+            wp_delete_post($detail_page_id, true);
         }
+        
+        // Créer une nouvelle page avec le contenu de debug
+        $detail_page = array(
+            'post_title' => '🌟 AstroFolio - Détail Image (DEBUG)',
+            'post_content' => '[astrofolio_image_detail]',
+            'post_status' => 'publish',
+            'post_type' => 'page',
+            'post_name' => 'astrofolio-detail'
+        );
+        $detail_page_id = wp_insert_post($detail_page);
+        update_option('astrofolio_detail_page', $detail_page_id);
     }
     
     // Méthode pour forcer la réactivation des règles (à utiliser via admin)

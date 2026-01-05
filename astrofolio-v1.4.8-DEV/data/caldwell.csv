@@ -1,0 +1,110 @@
+designation,common_name,object_type,constellation,ra_hours,dec_degrees,magnitude,size,distance_ly
+C1,Nébuleuse Hélice,Planetary Nebula,Aquarius,22.4958,-20.8378,7.3,16,650
+C2,Nébuleuse Fantôme,Galaxy,Cepheus,0.8042,72.0833,10.1,12×6,9000000
+C3,Nébuleuse de la Grotte,Reflection Nebula,Cepheus,22.1958,62.5833,10.0,10×8,2400
+C4,Galaxie de l'Iris,Galaxy,Draco,19.8375,70.1667,10.7,3×2,12000000
+C5,Nébuleuse de l'Iris,Reflection Nebula,Cepheus,21.0167,68.1667,7.4,18×11,1300
+C6,Nébuleuse Œil de Chat,Planetary Nebula,Draco,17.9667,66.6333,8.1,5.8,3300
+C7,Galaxie spirale,Galaxy,Camelopardalis,7.6167,65.6000,8.9,17×13,11000000
+C8,Nébuleuse de la Lagune,Emission Nebula,Sagittarius,18.0667,-24.3833,6.0,60×35,4100
+C9,Nébuleuse Pac-Man,Emission Nebula,Cassiopeia,0.8833,56.6167,7.4,35×30,9200
+C10,Nébuleuse de la Sorcière,Reflection Nebula,Eridanus,5.0833,-7.1667,13.0,3×2,1000
+C11,Nébuleuse de la Bulle,Emission Nebula,Cassiopeia,23.3375,61.2167,10.0,15×8,7100
+C12,Nébuleuse Flamme,Emission Nebula,Orion,5.6833,-1.9000,7.0,30×20,1400
+C13,Amas du Hibou,Open Cluster,Cassiopeia,1.3167,58.3167,6.4,13,7900
+C14,Double Amas de Persée,Open Cluster,Perseus,2.3333,57.1333,4.3,30×30,7500
+C15,Nébuleuse Clignante,Planetary Nebula,Cygnus,19.7833,50.5167,8.8,2.3,2200
+C16,Nébuleuse de la Lune Croissante,Emission Nebula,Cygnus,20.2000,38.3500,9.0,25×20,5000
+C17,Nébuleuse de la Rosette,Emission Nebula,Monoceros,6.5333,5.0333,9.0,80×60,5200
+C18,Nébuleuse du Sac de Charbon Nord,Dark Nebula,Cygnus,20.2042,40.2500,7.0,7×5,1800
+C19,Nébuleuse Cocoon,Emission Nebula,Cygnus,21.8708,47.2833,12.0,8×6,4000
+C20,Nébuleuse de l'Amérique du Nord,Emission Nebula,Cygnus,20.9583,44.3167,4.0,120×80,2000
+C21,Galaxie irrégulière,Galaxy,Canes Venatici,12.4708,44.0833,9.6,5×4,12500000
+C22,Nébuleuse Boule de Neige Bleue,Planetary Nebula,Andromeda,23.4292,42.5500,8.3,2.2,5500
+C23,Galaxie du Couteau d'Argent,Galaxy,Andromeda,2.3833,42.3500,10.8,14×3,30000000
+C24,Galaxie de Persée A,Galaxy,Perseus,3.3292,41.5167,11.6,2.6×1.8,237000000
+C25,Nébuleuse de l'Iris,Galaxy,Perseus,4.6000,50.9500,12.2,2.6×2.3,10000000
+C26,Nébuleuse Clownfish,Planetary Nebula,Hydra,9.2792,-32.9833,12.1,16,1300
+C27,Nébuleuse du Croissant,Emission Nebula,Cygnus,20.2000,38.3500,9.0,25×20,5000
+C28,Amas ouvert,Open Cluster,Andromeda,1.9583,37.8333,5.7,50,1300
+C29,Nébuleuse du Voile,Supernova Remnant,Cygnus,20.7500,31.7333,7.0,36×24,2100
+C30,Nébuleuse du Voile Oriental,Supernova Remnant,Cygnus,20.9333,31.7333,7.0,36×24,2100
+C31,Galaxie d'Andromède,Galaxy,Andromeda,0.7125,41.2689,3.4,178×63,2537000
+C32,Galaxie de la Baleine,Galaxy,Canes Venatici,12.7000,32.5333,9.2,15×3,25000000
+C33,Galaxie du Triangle,Galaxy,Triangulum,1.5583,30.6597,5.7,73×45,2723000
+C34,Nébuleuse du Voile,Supernova Remnant,Cygnus,20.7500,31.7333,7.0,36×24,2100
+C35,Nébuleuse du Voile Oriental,Supernova Remnant,Cygnus,20.9333,31.7333,7.0,36×24,2100
+C36,Nébuleuse de la Tête de Cheval,Dark Nebula,Orion,5.6833,-2.4833,6.8,8×6,1500
+C37,Amas ouvert,Open Cluster,Auriga,5.6000,34.1333,6.3,12,4100
+C38,Nébuleuse de la Mouette,Emission Nebula,Monoceros,7.0500,8.1000,10.0,120×40,3700
+C39,Nébuleuse de l'Esquimau,Planetary Nebula,Gemini,7.4958,20.9167,9.2,0.7,4200
+C40,Nébuleuse du Tau,Dark Nebula,Taurus,4.3500,25.8000,6.0,10×8,450
+C41,Nébuleuse Hyades,Open Cluster,Taurus,4.4667,15.8667,0.5,330,153
+C42,Nébuleuse d'Orion,Emission Nebula,Orion,5.5917,-5.3889,4.0,85×60,1344
+C43,Nébuleuse de la Tête de Cheval,Dark Nebula,Orion,5.6833,-2.4833,6.8,8×6,1500
+C44,Nébuleuse de la Flamme,Emission Nebula,Orion,5.6833,-1.9000,7.0,30×20,1400
+C45,Pléiades,Open Cluster,Taurus,3.7833,24.1167,1.6,110,444
+C46,Nébuleuse du Cône,Emission Nebula,Monoceros,6.6083,9.8833,3.9,7,2700
+C47,Nébuleuse Lambda Centauri,Emission Nebula,Centaurus,13.0167,-47.0833,6.2,60×40,5900
+C48,Nébuleuse Œil de Chat,Planetary Nebula,Hydra,12.0792,-18.8333,11.2,20×10,3400
+C49,Nébuleuse de la Rosette,Emission Nebula,Monoceros,6.5333,5.0333,9.0,80×60,5200
+C50,Nébuleuse de l'Aigle,Emission Nebula,Serpens,18.3167,-13.8167,6.4,35×28,7000
+C51,Nébuleuse Antennae,Galaxy,Corvus,12.0167,-18.8833,10.3,5×3,45000000
+C52,Galaxie spirale,Galaxy,Sculptor,0.7958,-25.2833,7.6,25×8,13000000
+C53,Galaxie spirale,Galaxy,Sculptor,1.4250,-25.4833,10.1,13×11,10000000
+C54,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
+C55,Nébuleuse Saturne,Planetary Nebula,Aquarius,21.0667,-11.3667,8.0,0.4,5200
+C56,Nébuleuse de l'Hélice,Planetary Nebula,Aquarius,22.4958,-20.8378,7.3,16,650
+C57,Nébuleuse Barnard 86,Dark Nebula,Sagittarius,18.0500,-27.8333,5.0,4×2,500
+C58,Nébuleuse de la Lagune,Emission Nebula,Sagittarius,18.0667,-24.3833,6.0,60×35,4100
+C59,Nébuleuse Trifide,Emission Nebula,Sagittarius,18.0333,-23.0333,9.0,20,5200
+C60,Nébuleuse de l'Aigle,Emission Nebula,Serpens,18.3167,-13.8167,6.4,35×28,7000
+C61,Nébuleuse Omega,Emission Nebula,Sagittarius,18.3417,-16.1833,7.0,11,5000
+C62,Galaxie spirale,Galaxy,Eridanus,1.6083,15.7833,9.4,10×9,32000000
+C63,Nébuleuse de la Tête de Cheval,Dark Nebula,Orion,5.6833,-2.4833,6.8,8×6,1500
+C64,Nébuleuse de l'Hélice,Planetary Nebula,Aquarius,22.4958,-20.8378,7.3,16,650
+C65,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
+C66,Galaxie du Sculpteur,Galaxy,Sculptor,0.7958,-33.7167,10.1,9×1.5,11400000
+C67,Nébuleuse Émeraude,Planetary Nebula,Musca,12.2667,-67.0333,11.6,20,1800
+C68,Nébuleuse R Coronae Australis,Reflection Nebula,Corona Australis,19.0167,-36.9500,13.0,1,500
+C69,Nébuleuse du Sac de Charbon,Dark Nebula,Crux,12.8500,-63.0000,12.2,7×5,600
+C70,Nébuleuse de la Sorcière,Reflection Nebula,Eridanus,5.0833,-7.1667,13.0,3×2,1000
+C71,Nébuleuse de l'Anneau Sud,Planetary Nebula,Vela,10.1500,-40.4167,8.4,14,2000
+C72,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
+C73,Galaxie irrégulière,Galaxy,Triangulum Australe,15.2000,-64.8667,10.9,5×4,7000000
+C74,Nébuleuse Papillon,Planetary Nebula,Scorpius,17.2292,-37.0833,9.6,3×2,3800
+C75,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
+C76,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
+C77,Galaxie du Centaure A,Galaxy,Centaurus,13.4250,-43.0167,6.8,18×14,13700000
+C78,Galaxie spirale,Galaxy,Centaurus,13.9292,-30.3167,10.6,4×3,46700000
+C79,Nébuleuse Fantôme,Galaxy,Cepheus,0.8042,72.0833,10.1,12×6,9000000
+C80,Galaxie du Centaure A,Galaxy,Centaurus,13.4250,-43.0167,6.8,18×14,13700000
+C81,Nébuleuse du Charbon,Dark Nebula,Centaurus,12.8500,-63.0000,12.2,7×5,600
+C82,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
+C83,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
+C84,Galaxie spirale,Galaxy,Centaurus,12.4458,-41.6167,10.4,5×4,15000000
+C85,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
+C86,Galaxie spirale,Galaxy,Pavo,18.1625,-65.2167,9.7,8×6,15000000
+C87,Nébuleuse Œil de Chat,Planetary Nebula,Norma,16.0333,-51.7333,12.8,43,5900
+C88,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
+C89,Nébuleuse S Norma,Emission Nebula,Norma,16.2000,-54.4167,6.2,10×5,6000
+C90,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
+C91,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
+C92,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
+C93,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
+C94,Nébuleuse Joyau,Open Cluster,Crux,12.8667,-60.8833,4.2,10,7600
+C95,Nébuleuse du Sac de Charbon,Dark Nebula,Crux,12.8500,-63.0000,12.2,7×5,600
+C96,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
+C97,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
+C98,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
+C99,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
+C100,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
+C101,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
+C102,Galaxie du Groupe Local,Galaxy,Octans,22.1833,-80.8667,11.3,2×1,4000000
+C103,Nébuleuse du Cône,Emission Nebula,Musca,12.5833,-70.1667,6.9,8,1300
+C104,Galaxie irrégulière,Galaxy,Tucana,0.4167,-72.8167,4.0,25×17,200000
+C105,Galaxie irrégulière,Galaxy,Hydrus,1.0333,-73.1500,11.5,2×1.5,13000000
+C106,Galaxie spirale,Galaxy,Tucana,1.1417,-69.0667,10.4,7×4,3000000
+C107,Amas globulaire,Globular Cluster,Tucana,0.4000,-72.0833,4.0,31,13400
+C108,Amas globulaire,Globular Cluster,Tucana,1.0667,-70.8667,4.5,10,15000
+C109,Nébuleuse de la Carène,Emission Nebula,Carina,10.7500,-59.8333,3.0,120×120,7500
