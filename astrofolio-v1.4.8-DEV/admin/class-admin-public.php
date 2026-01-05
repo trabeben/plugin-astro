@@ -188,6 +188,11 @@ class Astro_Admin_Public {
             <div class="astro-admin-header">
                 <h1>🌐 Gestion de l'Affichage Public</h1>
                 <p class="description">Configurez l'apparence et les fonctionnalités de votre galerie publique</p>
+                
+                <!-- Message d'aide pour les boutons -->
+                <div style="background: #d1ecf1; border: 1px solid #bee5eb; padding: 12px; margin: 15px 0; border-radius: 6px;">
+                    <strong>💡 Astuce:</strong> Pour créer vos pages automatiquement, allez dans l'onglet <strong>"📄 Pages"</strong> ci-dessous et utilisez le bouton <strong>"🚀 Créer les pages automatiquement"</strong>
+                </div>
             </div>
             
             <!-- Statistiques -->
@@ -219,6 +224,58 @@ class Astro_Admin_Public {
                         <div class="stat-number"><?php echo $stats['pages_created']; ?></div>
                         <div class="stat-label">Pages créées</div>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Création de pages - Section prioritaire -->
+            <div class="astro-page-creation" style="background: #fff; border: 1px solid #c3c4c7; padding: 20px; margin: 20px 0; border-radius: 8px;">
+                <h2>🚀 Création Automatique des Pages</h2>
+                <p>Créez automatiquement les pages WordPress nécessaires pour votre galerie publique.</p>
+                
+                <?php 
+                $gallery_page_id = $this->public_settings['pages']['gallery_page_id'] ?? null;
+                $detail_page_id = $this->public_settings['pages']['detail_page_id'] ?? null;
+                ?>
+                
+                <!-- État actuel des pages -->
+                <div style="background: #f0f0f1; padding: 15px; margin: 15px 0; border-radius: 6px;">
+                    <h3>📋 État Actuel</h3>
+                    <ul>
+                        <li><strong>Page Galerie:</strong> 
+                            <?php if ($gallery_page_id && get_post($gallery_page_id)) : ?>
+                                ✅ Créée - <a href="<?php echo get_permalink($gallery_page_id); ?>" target="_blank">Voir</a>
+                            <?php else : ?>
+                                ❌ Non créée
+                            <?php endif; ?>
+                        </li>
+                        <li><strong>Page Détail:</strong> 
+                            <?php if ($detail_page_id && get_post($detail_page_id)) : ?>
+                                ✅ Créée - <a href="<?php echo get_permalink($detail_page_id); ?>" target="_blank">Voir</a>
+                            <?php else : ?>
+                                ❌ Non créée
+                            <?php endif; ?>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div style="display: flex; gap: 15px; margin: 15px 0; flex-wrap: wrap;">
+                    <form method="post" style="display: inline-block;">
+                        <?php wp_nonce_field('astro_create_pages', 'astro_nonce'); ?>
+                        <input type="hidden" name="action" value="create_pages" />
+                        <button type="submit" class="button button-primary button-large">
+                            🚀 Créer les pages automatiquement
+                        </button>
+                        <p class="description">Crée les pages galerie et détail</p>
+                    </form>
+                    
+                    <form method="post" style="display: inline-block;">
+                        <?php wp_nonce_field('astro_create_all_pages', 'astro_nonce'); ?>
+                        <input type="hidden" name="action" value="create_all_pages" />
+                        <button type="submit" class="button button-secondary">
+                            🏗️ Créer toutes les pages
+                        </button>
+                        <p class="description">Force la création de toutes les pages</p>
+                    </form>
                 </div>
             </div>
             
@@ -258,6 +315,34 @@ class Astro_Admin_Public {
         
         <?php $this->render_admin_styles(); ?>
         <?php $this->render_admin_scripts(); ?>
+        
+        <script>
+        jQuery(document).ready(function($) {
+            // Gestion des onglets
+            $('.astro-nav-tabs .nav-tab').on('click', function(e) {
+                e.preventDefault();
+                
+                // Retirer la classe active de tous les onglets
+                $('.nav-tab').removeClass('nav-tab-active');
+                $('.tab-content').hide();
+                
+                // Ajouter la classe active à l'onglet cliqué
+                $(this).addClass('nav-tab-active');
+                
+                // Afficher le contenu correspondant
+                var tabId = $(this).data('tab') + '-tab';
+                $('#' + tabId).show();
+                
+                console.log('Onglet activé:', tabId);
+            });
+            
+            // Forcer l'affichage de l'onglet Pages si pas de boutons visibles
+            if ($('.pages-management').length === 0) {
+                console.log('Aucune section pages trouvée, activation de l\'onglet Pages');
+                $('.nav-tab[data-tab="pages"]').click();
+            }
+        });
+        </script>
         <?php
     }
     
@@ -311,26 +396,76 @@ class Astro_Admin_Public {
     }
     
     public function pages_management_callback() {
+        $gallery_page_id = $this->public_settings['pages']['gallery_page_id'] ?? null;
+        $detail_page_id = $this->public_settings['pages']['detail_page_id'] ?? null;
+        
+        // Vérifier si les pages existent vraiment
+        $gallery_exists = !empty($gallery_page_id) && get_post($gallery_page_id);
+        $detail_exists = !empty($detail_page_id) && get_post($detail_page_id);
         ?>
         <div class="pages-management">
-            <h4>🔧 Actions sur les pages</h4>
-            <form method="post" style="display: inline-block; margin-right: 20px;">
-                <?php wp_nonce_field('astro_create_pages', 'astro_nonce'); ?>
-                <input type="hidden" name="action" value="create_pages" />
-                <button type="submit" class="button button-primary">
-                    🚀 Créer les pages automatiquement
-                </button>
-                <p class="description">Crée automatiquement les pages galerie et détail avec le contenu approprié</p>
-            </form>
+            <h4>📋 Intégration WordPress Automatique</h4>
             
-            <form method="post" style="display: inline-block;">
-                <?php wp_nonce_field('astro_update_pages', 'astro_nonce'); ?>
-                <input type="hidden" name="action" value="update_pages" />
-                <button type="submit" class="button">
-                    🔄 Mettre à jour les pages existantes
-                </button>
-                <p class="description">Met à jour le contenu des pages avec les derniers shortcodes</p>
-            </form>
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 6px; margin: 10px 0;">
+                <p><strong>Pages créées automatiquement :</strong></p>
+                <ul style="margin: 10px 0;">
+                    <li>🌌 <strong>Galerie :</strong> 
+                    <?php if ($gallery_exists) : 
+                        $gallery_page = get_post($gallery_page_id); ?>
+                            <a href="<?php echo get_permalink($gallery_page_id); ?>" target="_blank"><?php echo $gallery_page->post_title; ?></a> - <a href="<?php echo get_permalink($gallery_page_id); ?>" target="_blank">Voir ➚</a>
+                    <?php else : ?>
+                        <span style="color: #d63384; font-weight: bold;">❌ Pas encore créée</span>
+                    <?php endif; ?>
+                    </li>
+                    <li>🌟 <strong>Détail :</strong> 
+                    <?php if ($detail_exists) : 
+                        $detail_page = get_post($detail_page_id); ?>
+                            <a href="<?php echo get_permalink($detail_page_id); ?>" target="_blank"><?php echo $detail_page->post_title; ?></a> - <a href="<?php echo get_permalink($detail_page_id); ?>" target="_blank">Voir ➚</a>
+                    <?php else : ?>
+                        <span style="color: #d63384; font-weight: bold;">❌ Pas encore créée</span>
+                    <?php endif; ?>
+                    </li>
+                </ul>
+                <p class="description" style="font-style: italic; color: #666;">Ces pages utilisent votre thème WordPress (header, menu, footer, sidebar, etc.)</p>
+            </div>
+
+            <!-- BOUTONS TOUJOURS VISIBLES - COULEURS VIVES -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: white; margin: 0 0 15px 0;">🚀 CRÉER VOS PAGES MAINTENANT</h3>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <form method="post" style="display: inline-block;">
+                        <?php wp_nonce_field('astro_create_pages', 'astro_nonce'); ?>
+                        <input type="hidden" name="action" value="create_pages" />
+                        <button type="submit" class="button button-primary" style="
+                            background: #28a745 !important; 
+                            border-color: #28a745 !important;
+                            font-size: 16px !important;
+                            padding: 10px 20px !important;
+                            height: auto !important;
+                            font-weight: bold !important;
+                        ">
+                            🚀 CRÉER LES PAGES AUTOMATIQUEMENT
+                        </button>
+                        <br><span style="color: #e3f2fd; font-size: 12px;">Crée les pages galerie et détail</span>
+                    </form>
+                    
+                    <form method="post" style="display: inline-block;">
+                        <?php wp_nonce_field('astro_create_all_pages', 'astro_nonce'); ?>
+                        <input type="hidden" name="action" value="create_all_pages" />
+                        <button type="submit" class="button" style="
+                            background: #ffc107 !important; 
+                            border-color: #ffc107 !important;
+                            color: #000 !important;
+                            font-size: 14px !important;
+                            padding: 8px 16px !important;
+                            height: auto !important;
+                        ">
+                            🏗️ FORCER LA CRÉATION
+                        </button>
+                        <br><span style="color: #e3f2fd; font-size: 12px;">Recrée même si elles existent</span>
+                    </form>
+                </div>
+            </div>
         </div>
         <?php
     }
@@ -344,6 +479,21 @@ class Astro_Admin_Public {
         ?>
         <div class="pages-management-section">
             <h2>📄 Gestion des Pages Publiques</h2>
+            
+            <!-- Message informatif si aucune page n'existe -->
+            <?php if (!$gallery_page_id && !$detail_page_id) : ?>
+                <div class="notice notice-info">
+                    <p><strong>🔵 Information:</strong> Aucune page publique n'est actuellement créée. Utilisez le bouton "Créer les pages automatiquement" ci-dessous pour créer vos pages galerie et détail.</p>
+                </div>
+            <?php elseif (!$gallery_page_id || !$detail_page_id) : ?>
+                <div class="notice notice-warning">
+                    <p><strong>🟡 Attention:</strong> Certaines pages sont manquantes. Utilisez "Créer les pages automatiquement" pour créer les pages manquantes.</p>
+                </div>
+            <?php else : ?>
+                <div class="notice notice-success">
+                    <p><strong>🟢 Parfait:</strong> Toutes les pages publiques sont créées et fonctionnelles.</p>
+                </div>
+            <?php endif; ?>
             
             <div class="pages-grid">
                 <!-- Page Galerie -->
@@ -439,6 +589,16 @@ class Astro_Admin_Public {
             <div class="global-actions">
                 <h3>🎬 Actions Globales</h3>
                 <div class="actions-row">
+                    <!-- Bouton principal de création -->
+                    <form method="post" class="action-form">
+                        <?php wp_nonce_field('astro_create_pages', 'astro_nonce'); ?>
+                        <input type="hidden" name="action" value="create_pages" />
+                        <button type="submit" class="button button-primary button-large">
+                            🚀 Créer les pages automatiquement
+                        </button>
+                        <p class="description">Crée automatiquement les pages galerie et détail avec le contenu approprié</p>
+                    </form>
+                    
                     <form method="post" class="action-form">
                         <?php wp_nonce_field('astro_create_all_pages', 'astro_nonce'); ?>
                         <input type="hidden" name="action" value="create_all_pages" />
@@ -466,18 +626,51 @@ class Astro_Admin_Public {
      * Traitement des actions d'administration
      */
     private function handle_admin_actions() {
-        if (!isset($_POST['astro_nonce']) || !wp_verify_nonce($_POST['astro_nonce'], $_POST['action'] ?? '')) {
+        $action = $_POST['action'] ?? '';
+        $nonce_name = '';
+        
+        // Déterminer le nom du nonce en fonction de l'action
+        switch ($action) {
+            case 'create_pages':
+                $nonce_name = 'astro_create_pages';
+                break;
+            case 'update_pages':
+                $nonce_name = 'astro_update_pages';
+                break;
+            case 'update_page_content':
+                $nonce_name = 'astro_update_page_content';
+                break;
+            case 'regenerate_all_pages':
+                $nonce_name = 'astro_regenerate_all_pages';
+                break;
+            case 'create_all_pages':
+                $nonce_name = 'astro_create_all_pages';
+                break;
+            default:
+                wp_die('Action non autorisée');
+        }
+        
+        if (!isset($_POST['astro_nonce']) || !wp_verify_nonce($_POST['astro_nonce'], $nonce_name)) {
             wp_die('Sécurité: Nonce invalide');
         }
         
         switch ($_POST['action']) {
             case 'create_all_pages':
-                $this->create_all_pages();
+                $result = $this->create_all_pages();
                 break;
                 
             case 'create_pages':
-                $this->create_gallery_page();
-                $this->create_detail_page();
+                $gallery_result = $this->create_gallery_page();
+                $detail_result = $this->create_detail_page();
+                if ($gallery_result && $detail_result) {
+                    add_action('admin_notices', function() {
+                        echo '<div class="notice notice-success"><p>✅ Les pages galerie et détail ont été créées avec succès!</p></div>';
+                    });
+                } else {
+                    add_action('admin_notices', function() {
+                        echo '<div class="notice notice-error"><p>❌ Erreur lors de la création d\'une ou plusieurs pages.</p></div>';
+                    });
+                }
                 break;
                 
             case 'update_pages':

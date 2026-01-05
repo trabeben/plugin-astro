@@ -4,7 +4,7 @@
  * Plugin URI: https://photos-et-nature.com/astrofolio  
  * Description: Plugin de gestion d'images d'astrophotographie avec métadonnées complètes et système de récupération avancé
  * Author: Benoist Degonne
- * Version: 1.4.7-STABLE
+ * Version: 1.4.8-DEV
  * License: GPL v2 or later
  * Text Domain: astrofolio
  * Requires at least: 5.0
@@ -12,20 +12,20 @@
  * Requires PHP: 7.4
  * 
  * =================================================================
- * ASTROFOLIO v1.4.7-STABLE ✅ - VERSION OFFICIELLEMENT VALIDÉE
+ * ASTROFOLIO v1.4.8-DEV 🚀 - NOUVEAU SYSTÈME DE FILTRES GALERIE
  * =================================================================
- * Validée le: 5 janvier 2026
+ * En développement depuis: 5 janvier 2026
  * 
- * ✅ FONCTIONNALITÉS VALIDÉES :
- * - Page de détail d'image fonctionnelle (fix erreur 500)
- * - Affichage complet de toutes les métadonnées astronomiques
- * - Interface responsive moderne organisée par sections
- * - Gestion "N.C." pour champs vides
- * - Support anciens et nouveaux formats de métadonnées
- * - Code debug nettoyé et désactivé
- * - Compatible WordPress 6.9
+ * 🆕 NOUVELLES FONCTIONNALITÉS v1.4.8 :
+ * - Outil de tri et filtrage en haut de la galerie
+ * - Filtres par objet céleste, télescope, caméra, filtres optiques
+ * - Recherche libre dans les titres et descriptions
+ * - Tri par date, nom, objet céleste, équipement
+ * - Interface moderne avec gradient et animations
+ * - Responsive design (mobile/tablette/desktop)
+ * - Filtrage et tri en temps réel côté client
  * 
- * 🚀 PRÊT POUR LA PRODUCTION
+ * 🔧 BASÉ SUR v1.4.7-STABLE avec ajouts :
  * 
  * Ce plugin permet la gestion complète d'images d'astrophotographie avec :
  * 
@@ -7295,112 +7295,29 @@ class AstroFolio_Safe {
             return '<div style="background: #fff3cd; border: 1px solid #ffc107; padding: 20px; margin: 20px 0; border-radius: 8px;"><p>Aucune image d\'astrophotographie disponible.</p></div>';
         }
 
-        // Générer le panneau de filtres/tri EN HAUT
-        $output = $this->render_gallery_filters($all_images);
-        
-        // Appliquer les filtres aux images
-        $filtered_images = $this->apply_gallery_filters($all_images);
-        
-        // Compter le nombre total d'images après filtrage
-        $total_images = count($filtered_images);
-        $has_more = $total_images > $limit;
-        
-        // Afficher seulement les premières images selon la limite
-        $images = array_slice($filtered_images, 0, $limit);
-        
         // Créer un identifiant unique pour cette galerie
         $gallery_id = 'astro-gallery-' . uniqid();
         
-        $output .= '<div id="' . $gallery_id . '-results" class="astro-gallery-results" style="display: grid; grid-template-columns: repeat(' . $columns . ', 1fr); gap: 20px; width: 100%; margin-top: 20px;">';
+        // Générer le panneau de filtres/tri EN HAUT
+        $output = $this->render_gallery_filters($all_images, $gallery_id);
         
-        foreach ($images as $image) {
+        // Container pour les résultats filtrés
+        $output .= '<div id="' . $gallery_id . '-results" class="astro-gallery-results" style="display: grid; grid-template-columns: repeat(' . $columns . ', 1fr); gap: 20px; width: 100%; margin-top: 20px;" data-columns="' . $columns . '">';
+        
+        // Afficher toutes les images - le filtrage se fera côté client
+        foreach ($all_images as $image) {
             $output .= $this->render_gallery_image($image, $size);
         }
         
         $output .= '</div>';
         
-        // Ajouter le bouton "Charger plus" si nécessaire
-        if ($show_pagination && $has_more) {
-            $output .= $this->render_load_more_button($gallery_id, $limit, $total_images);
-        }
+        // Ajouter le compteur de résultats
+        $output .= '<div id="' . $gallery_id . '-counter" class="astro-results-counter" style="text-align: center; margin: 20px 0; padding: 10px; background: #f8f9fa; border-radius: 6px; font-weight: 500;">';
+        $output .= 'Affichage de <span class="visible-count">' . count($all_images) . '</span> sur <span class="total-count">' . count($all_images) . '</span> images';
+        $output .= '</div>';
         
-        return $output;
-    }
-        
-        // Ajouter le bouton "Charger plus" si la pagination est activée et qu'il y a plus d'images
-        if ($show_pagination && $has_more) {
-            $gallery_id = 'astro-gallery-' . uniqid();
-            $ajax_url = admin_url('admin-ajax.php');
-            $nonce = wp_create_nonce('astro_public_nonce');
-            
-            $output .= '<div style="text-align: center; margin: 20px 0;">';
-            $output .= '<button id="load-more-' . $gallery_id . '" class="astro-load-more-btn" data-page="1" data-limit="' . $limit . '" data-ajax-url="' . esc_url($ajax_url) . '" data-nonce="' . esc_attr($nonce) . '" style="background: #0073aa; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-size: 16px; cursor: pointer; transition: background-color 0.3s ease;" onmouseover="this.style.backgroundColor=\'#005a87\'" onmouseout="this.style.backgroundColor=\'#0073aa\'">Charger plus d\'images</button>';
-            $output .= '</div>';
-            
-            // S'assurer que jQuery est chargé
-            wp_enqueue_script('jquery');
-            
-            $output .= '<script>
-            (function($) {
-                if (typeof $ === "undefined") {
-                    console.error("jQuery n\'est pas chargé");
-                    return;
-                }
-                
-                $(document).ready(function() {
-                    $("#load-more-' . $gallery_id . '").on("click", function(e) {
-                        e.preventDefault();
-                        
-                        var button = $(this);
-                        var page = parseInt(button.data("page")) + 1;
-                        var limit = parseInt(button.data("limit"));
-                        var ajaxUrl = button.data("ajax-url");
-                        var nonce = button.data("nonce");
-                        
-                        console.log("Chargement page:", page, "limit:", limit);
-                        
-                        button.text("Chargement...").prop("disabled", true);
-                        
-                        $.ajax({
-                            url: ajaxUrl,
-                            type: "POST",
-                            dataType: "json",
-                            data: {
-                                action: "astro_load_more_images",
-                                page: page,
-                                limit: limit,
-                                nonce: nonce
-                            },
-                            success: function(response) {
-                                console.log("Réponse AJAX:", response);
-                                if (response.success) {
-                                    var newImages = $(response.data.html);
-                                    button.parent().prev().append(newImages);
-                                    button.data("page", page);
-                                    
-                                    if (!response.data.has_more) {
-                                        button.hide();
-                                        button.parent().append("<p style=\\"color: #666; font-style: italic;\\">Toutes les images ont été chargées</p>");
-                                    } else {
-                                        button.text("Charger plus d\'images").prop("disabled", false);
-                                    }
-                                } else {
-                                    console.error("Erreur serveur:", response.data.message);
-                                    alert("Erreur lors du chargement des images: " + (response.data.message || "Erreur inconnue"));
-                                    button.text("Charger plus d\'images").prop("disabled", false);
-                                }
-                            },
-                            error: function(xhr, status, error) {
-                                console.error("Erreur AJAX:", status, error, xhr.responseText);
-                                alert("Erreur de connexion: " + status + " - " + error);
-                                button.text("Charger plus d\'images").prop("disabled", false);
-                            }
-                        });
-                    });
-                });
-            })(jQuery);
-            </script>';
-        }
+        // Ajouter le JavaScript pour le filtrage
+        $output .= $this->render_filter_javascript($gallery_id);
         
         return $output;
     }
@@ -8278,6 +8195,384 @@ class AstroFolio_Safe {
             'message' => $message,
             'results' => $results
         ));
+    }
+    
+    // === NOUVEAU SYSTÈME DE FILTRAGE/TRI POUR v1.4.8 ===
+    
+    /**
+     * Génère le panneau de filtres et de tri de la galerie
+     */
+    private function render_gallery_filters($images, $gallery_id = 'astro-gallery') {
+        // Extraire toutes les valeurs uniques des métadonnées pour les dropdowns
+        $filter_data = $this->extract_filter_data($images);
+        
+        $filter_id = 'astro-filters-' . uniqid();
+        
+        $output = '<div id="' . $filter_id . '" class="astro-gallery-filters" style="
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            color: white;
+        ">';
+        
+        $output .= '<div style="display: flex; align-items: center; margin-bottom: 15px;">';
+        $output .= '<h3 style="margin: 0; color: white; font-size: 18px;">🔍 Filtrer & Trier la Galerie</h3>';
+        $output .= '<button id="toggle-filters" style="margin-left: auto; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer;">📋 Filtres</button>';
+        $output .= '</div>';
+        
+        $output .= '<div id="filter-content" class="filter-content" style="
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        ">';
+        
+        // === RECHERCHE LIBRE ===
+        $output .= '<div class="filter-group">';
+        $output .= '<label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">🔍 Recherche libre</label>';
+        $output .= '<input type="text" id="' . $gallery_id . '-search-text" placeholder="Nom objet, description..." style="
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+            color: #333;
+        ">';
+        $output .= '</div>';
+        
+        // === TRI ===
+        $output .= '<div class="filter-group">';
+        $output .= '<label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">📊 Trier par</label>';
+        $output .= '<select id="' . $gallery_id . '-sort-by" style="width: 100%; padding: 8px; border: none; border-radius: 4px; font-size: 14px;">';
+        $output .= '<option value="date-desc">➡️ Plus récent d\'abord</option>';
+        $output .= '<option value="date-asc">⬅️ Plus ancien d\'abord</option>';
+        $output .= '<option value="title-asc">🔤 Nom A-Z</option>';
+        $output .= '<option value="title-desc">🔤 Nom Z-A</option>';
+        $output .= '<option value="object-asc">🌟 Objet A-Z</option>';
+        $output .= '<option value="telescope">🔭 Par télescope</option>';
+        $output .= '<option value="camera">📷 Par caméra</option>';
+        $output .= '</select>';
+        $output .= '</div>';
+        
+        // === FILTRE OBJET CÉLESTE ===
+        $output .= '<div class="filter-group">';
+        $output .= '<label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">🌟 Objet céleste</label>';
+        $output .= '<select id="' . $gallery_id . '-filter-object" style="width: 100%; padding: 8px; border: none; border-radius: 4px; font-size: 14px;">';
+        $output .= '<option value="">🌌 Tous les objets</option>';
+        foreach ($filter_data['objects'] as $object) {
+            $output .= '<option value="' . esc_attr($object) . '">' . esc_html($object) . '</option>';
+        }
+        $output .= '</select>';
+        $output .= '</div>';
+        
+        // === FILTRE TÉLESCOPE ===
+        $output .= '<div class="filter-group">';
+        $output .= '<label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">🔭 Télescope</label>';
+        $output .= '<select id="' . $gallery_id . '-filter-telescope" style="width: 100%; padding: 8px; border: none; border-radius: 4px; font-size: 14px;">';
+        $output .= '<option value="">🔭 Tous les télescopes</option>';
+        foreach ($filter_data['telescopes'] as $telescope) {
+            $output .= '<option value="' . esc_attr($telescope) . '">' . esc_html($telescope) . '</option>';
+        }
+        $output .= '</select>';
+        $output .= '</div>';
+        
+        // === FILTRE CAMÉRA ===
+        $output .= '<div class="filter-group">';
+        $output .= '<label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">📷 Caméra</label>';
+        $output .= '<select id="' . $gallery_id . '-filter-camera" style="width: 100%; padding: 8px; border: none; border-radius: 4px; font-size: 14px;">';
+        $output .= '<option value="">📷 Toutes les caméras</option>';
+        foreach ($filter_data['cameras'] as $camera) {
+            $output .= '<option value="' . esc_attr($camera) . '">' . esc_html($camera) . '</option>';
+        }
+        $output .= '</select>';
+        $output .= '</div>';
+        
+        // === FILTRE FILTRES OPTIQUES ===
+        $output .= '<div class="filter-group">';
+        $output .= '<label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px;">🌈 Filtres</label>';
+        $output .= '<select id="' . $gallery_id . '-filter-filters" style="width: 100%; padding: 8px; border: none; border-radius: 4px; font-size: 14px;">';
+        $output .= '<option value="">🌈 Tous les filtres</option>';
+        foreach ($filter_data['filters'] as $filter) {
+            $output .= '<option value="' . esc_attr($filter) . '">' . esc_html($filter) . '</option>';
+        }
+        $output .= '</select>';
+        $output .= '</div>';
+        
+        $output .= '</div>'; // filter-content
+        
+        // === BOUTONS D'ACTION ===
+        $output .= '<div style="margin-top: 15px; text-align: center; display: flex; gap: 10px; justify-content: center;">';
+        $output .= '<button id="' . $gallery_id . '-apply-filters" style="
+            background: #27ae60;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        " onmouseover="this.style.background=\'#219a52\'" onmouseout="this.style.background=\'#27ae60\'">✅ Appliquer les filtres</button>';
+        
+        $output .= '<button id="' . $gallery_id . '-reset-filters" style="
+            background: #e74c3c;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        " onmouseover="this.style.background=\'#c0392b\'" onmouseout="this.style.background=\'#e74c3c\'">🗑️ Réinitialiser</button>';
+        $output .= '</div>';
+        
+        $output .= '</div>'; // astro-gallery-filters
+        
+        return $output;
+    }
+    
+    /**
+     * Extrait les données uniques pour les filtres
+     */
+    private function extract_filter_data($images) {
+        $objects = array();
+        $telescopes = array();
+        $cameras = array();
+        $filters = array();
+        
+        foreach ($images as $image) {
+            $image_id = $image->ID;
+            
+            // Objet céleste
+            $object = get_post_meta($image_id, 'astro_object_name', true);
+            if (!empty($object) && !in_array($object, $objects)) {
+                $objects[] = $object;
+            }
+            
+            // Télescope (essayer différents formats)
+            $telescope = get_post_meta($image_id, 'astro_telescope', true);
+            if (empty($telescope)) {
+                $telescope_brand = get_post_meta($image_id, 'astro_telescope_brand', true);
+                $telescope_model = get_post_meta($image_id, 'astro_telescope_model', true);
+                $telescope = trim($telescope_brand . ' ' . $telescope_model);
+            }
+            if (!empty($telescope) && !in_array($telescope, $telescopes)) {
+                $telescopes[] = $telescope;
+            }
+            
+            // Caméra (essayer différents formats)
+            $camera = get_post_meta($image_id, 'astro_camera', true);
+            if (empty($camera)) {
+                $camera_brand = get_post_meta($image_id, 'astro_camera_brand', true);
+                $camera_model = get_post_meta($image_id, 'astro_camera_model', true);
+                $camera = trim($camera_brand . ' ' . $camera_model);
+            }
+            if (!empty($camera) && !in_array($camera, $cameras)) {
+                $cameras[] = $camera;
+            }
+            
+            // Filtres optiques
+            $filter = get_post_meta($image_id, 'astro_filters', true);
+            if (!empty($filter)) {
+                // Séparer les filtres multiples
+                $filter_list = array_map('trim', explode(',', $filter));
+                foreach ($filter_list as $single_filter) {
+                    if (!empty($single_filter) && !in_array($single_filter, $filters)) {
+                        $filters[] = $single_filter;
+                    }
+                }
+            }
+        }
+        
+        // Trier les listes
+        sort($objects);
+        sort($telescopes);
+        sort($cameras);
+        sort($filters);
+        
+        return array(
+            'objects' => $objects,
+            'telescopes' => $telescopes,
+            'cameras' => $cameras,
+            'filters' => $filters
+        );
+    }
+    
+    /**
+     * Applique les filtres aux images (côté serveur pour l'instant)
+     */
+    private function apply_gallery_filters($images) {
+        // Pour l'instant, retourner toutes les images
+        // Le filtrage sera fait côté client avec JavaScript
+        return $images;
+    }
+    
+    /**
+     * Rendu d'une image individuelle de la galerie
+     */
+    private function render_gallery_image($image, $size) {
+        $image_id = $image->ID;
+        $title = get_the_title($image_id) ?: 'Image d\'astrophotographie';
+        $image_url = wp_get_attachment_image_src($image_id, $size)[0];
+        
+        // Créer l'URL de détail
+        $detail_page_id = get_option('astrofolio_detail_page');
+        if ($detail_page_id && get_post($detail_page_id)) {
+            $detail_url = get_permalink($detail_page_id) . '?image_id=' . $image_id;
+        } else {
+            $detail_url = '/astrofolio/image/' . $image_id;
+        }
+        
+        // Récupérer métadonnées pour les attributs de données (pour le filtrage JS)
+        $object = get_post_meta($image_id, 'astro_object_name', true);
+        $telescope = get_post_meta($image_id, 'astro_telescope', true);
+        $camera = get_post_meta($image_id, 'astro_camera', true);
+        $filters = get_post_meta($image_id, 'astro_filters', true);
+        
+        $output = '<div class="astro-gallery-item" 
+                     data-title="' . esc_attr(strtolower($title)) . '"
+                     data-object="' . esc_attr(strtolower($object)) . '"
+                     data-telescope="' . esc_attr(strtolower($telescope)) . '"
+                     data-camera="' . esc_attr(strtolower($camera)) . '"
+                     data-filters="' . esc_attr(strtolower($filters)) . '"
+                     data-date="' . esc_attr($image->post_date) . '"
+                     style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 10px; text-align: center;">';
+        
+        $output .= '<a href="' . esc_url($detail_url) . '" style="display: block; text-decoration: none; color: inherit;">';
+        $output .= '<img src="' . esc_url($image_url) . '" alt="' . esc_attr($title) . '" style="width: 100%; height: 200px; object-fit: cover; border-radius: 4px; margin-bottom: 10px; cursor: pointer; transition: transform 0.2s ease;" onmouseover="this.style.transform=\'scale(1.02)\'" onmouseout="this.style.transform=\'scale(1)\'">';
+        $output .= '<div style="font-size: 14px; font-weight: bold; color: #333;">' . esc_html($title) . '</div>';
+        
+        // Afficher quelques métadonnées sous le titre
+        if (!empty($object)) {
+            $output .= '<div style="font-size: 12px; color: #666; margin-top: 5px;">🌟 ' . esc_html($object) . '</div>';
+        }
+        
+        $output .= '</a>';
+        $output .= '</div>';
+        
+        return $output;
+    }
+    
+    /**
+     * JavaScript pour l'interactivité des filtres
+     */
+    private function render_filter_javascript($filter_id) {
+        wp_enqueue_script('jquery');
+        
+        return '<script>
+        jQuery(document).ready(function($) {
+            // Toggle des filtres
+            $("#toggle-filters").click(function() {
+                $("#filter-content").slideToggle();
+                $(this).text($(this).text().includes("📋") ? "🔼 Masquer" : "📋 Filtres");
+            });
+            
+            // Application des filtres
+            $("#apply-filters").click(function() {
+                applyFilters();
+            });
+            
+            // Réinitialisation des filtres
+            $("#reset-filters").click(function() {
+                $("#search-text").val("");
+                $("#sort-by").val("date-desc");
+                $("#filter-object, #filter-telescope, #filter-camera, #filter-filters").val("");
+                applyFilters();
+            });
+            
+            function applyFilters() {
+                var searchText = $("#search-text").val().toLowerCase();
+                var sortBy = $("#sort-by").val();
+                var filterObject = $("#filter-object").val().toLowerCase();
+                var filterTelescope = $("#filter-telescope").val().toLowerCase();
+                var filterCamera = $("#filter-camera").val().toLowerCase();
+                var filterFilters = $("#filter-filters").val().toLowerCase();
+                
+                var $items = $(".astro-gallery-item");
+                
+                // Filtrage
+                $items.each(function() {
+                    var $item = $(this);
+                    var show = true;
+                    
+                    // Recherche libre
+                    if (searchText && !$item.data("title").includes(searchText) && 
+                        !$item.data("object").includes(searchText)) {
+                        show = false;
+                    }
+                    
+                    // Filtre objet
+                    if (filterObject && $item.data("object") !== filterObject) {
+                        show = false;
+                    }
+                    
+                    // Filtre télescope
+                    if (filterTelescope && $item.data("telescope") !== filterTelescope) {
+                        show = false;
+                    }
+                    
+                    // Filtre caméra
+                    if (filterCamera && $item.data("camera") !== filterCamera) {
+                        show = false;
+                    }
+                    
+                    // Filtre filtres optiques
+                    if (filterFilters && !$item.data("filters").includes(filterFilters)) {
+                        show = false;
+                    }
+                    
+                    $item.toggle(show);
+                });
+                
+                // Tri
+                var $container = $(".astro-gallery-results");
+                var $visibleItems = $items.filter(":visible");
+                
+                if (sortBy === "title-asc") {
+                    $visibleItems.sort(function(a, b) {
+                        return $(a).data("title").localeCompare($(b).data("title"));
+                    });
+                } else if (sortBy === "title-desc") {
+                    $visibleItems.sort(function(a, b) {
+                        return $(b).data("title").localeCompare($(a).data("title"));
+                    });
+                } else if (sortBy === "object-asc") {
+                    $visibleItems.sort(function(a, b) {
+                        return $(a).data("object").localeCompare($(b).data("object"));
+                    });
+                } else if (sortBy === "date-desc") {
+                    $visibleItems.sort(function(a, b) {
+                        return new Date($(b).data("date")) - new Date($(a).data("date"));
+                    });
+                } else if (sortBy === "date-asc") {
+                    $visibleItems.sort(function(a, b) {
+                        return new Date($(a).data("date")) - new Date($(b).data("date"));
+                    });
+                }
+                
+                // Réorganiser les éléments
+                $container.append($visibleItems);
+                
+                // Masquer automatiquement les filtres après application sur mobile
+                if ($(window).width() < 768) {
+                    $("#filter-content").slideUp();
+                    $("#toggle-filters").text("📋 Filtres");
+                }
+            }
+            
+            // Masquer les filtres par défaut sur mobile
+            if ($(window).width() < 768) {
+                $("#filter-content").hide();
+            }
+        });
+        </script>';
     }
 }
 
