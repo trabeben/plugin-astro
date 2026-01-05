@@ -1,0 +1,481 @@
+/**
+ * =============================================================================
+ * STYLES CSS POUR L'INTERFACE D'ADMINISTRATION ASTROFOLIO
+ * =============================================================================
+ * 
+ * Ce fichier contient tous les styles pour l'interface d'administration
+ * 
+ * 🎨 SECTIONS PRINCIPALES :
+ * - Dashboard : Statistiques et vue d'ensemble
+ * - Formulaires : Upload et édition d'images
+ * - Galerie : Visualisation en grille des images
+ * - Catalogues : Interface de gestion des catalogues
+ * - Métadonnées : Formulaires détaillés
+ * - Outils : Diagnostic et récupération
+ * 
+ * 📏 CONVENTIONS :
+ * - Préfixe 'astro-' pour tous les ID/classes
+ * - Mobile-first avec media queries
+ * - Variables CSS pour la cohérence des couleurs
+ * - Commentaires par section fonctionnelle
+ * 
+ * 🌈 PALETTE DE COULEURS :
+ * - Primaire : #1e3a8a (bleu espace)
+ * - Secondaire : #7c3aed (violet cosmique)
+ * - Accent : #f59e0b (orange étoile)
+ * - Neutre : #6b7280 (gris)
+ * 
+ * @version 1.4.6
+ * @author Benoist Degonne
+ */
+
+/* =============================================================================
+   DASHBOARD - VUE D'ENSEMBLE ET STATISTIQUES
+   ============================================================================= */
+
+/* Dashboard */
+.astro-dashboard-stats {
+    display: flex;
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.astro-stat-box {
+    background: white;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 20px;
+    text-align: center;
+    min-width: 200px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.astro-stat-box h3 {
+    margin: 0 0 10px 0;
+    color: #23282d;
+    font-size: 16px;
+}
+
+.stat-number {
+    font-size: 36px;
+    font-weight: bold;
+    color: #0073aa;
+    margin: 10px 0;
+}
+
+.astro-quick-actions {
+    background: white;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.astro-quick-actions .button {
+    margin: 5px 10px 5px 0;
+}
+
+/* Upload Form */
+.astro-upload-container {
+    max-width: 1000px;
+    margin: 20px 0;
+}
+
+.upload-section {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.upload-section h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #23282d;
+    border-bottom: 2px solid #0073aa;
+    padding-bottom: 10px;
+    font-size: 18px;
+}
+
+.form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+}
+
+.form-field {
+    flex: 1;
+    margin-bottom: 15px;
+}
+
+.form-field label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: #2c3e50;
+    font-size: 15px;
+    position: relative;
+    padding-left: 20px;
+}
+
+.form-field label::before {
+    content: '📷';
+    position: absolute;
+    left: 0;
+    font-size: 14px;
+    color: #0073aa;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e1e5e9;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #2c3e50;
+    background: white;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102,126,234,0.1), 0 4px 12px rgba(0,0,0,0.1);
+    outline: none;
+    transform: translateY(-2px);
+}
+
+.form-field input[type="file"] {
+    padding: 6px;
+    background: #f9f9f9;
+}
+
+.button-large {
+    font-size: 16px !important;
+    padding: 10px 20px !important;
+    height: auto !important;
+}
+
+/* Gallery */
+.astro-no-content {
+    text-align: center;
+    padding: 50px;
+    background: white;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.astro-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+    .astro-gallery-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.astro-gallery-item {
+    background: white;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.astro-gallery-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.astro-gallery-item img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    transition: opacity 0.3s ease;
+}
+
+.astro-gallery-item img:hover {
+    opacity: 0.9;
+}
+
+.astro-gallery-content {
+    padding: 15px;
+}
+
+.astro-gallery-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+    line-height: 1.3;
+}
+
+.astro-gallery-meta {
+    font-size: 14px;
+    color: #666;
+    width: 100%;
+}
+
+.astro-gallery-meta tr td {
+    padding: 2px 5px 2px 0;
+    vertical-align: top;
+    border: none;
+}
+
+.astro-gallery-meta tr td:first-child {
+    font-weight: bold;
+    white-space: nowrap;
+    color: #555;
+}
+
+/* Catalog */
+.astro-catalog-info,
+.astro-catalog-actions {
+    background: white;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .astro-dashboard-stats {
+        flex-direction: column;
+    }
+    
+    .astro-upload-container {
+        margin: 10px 0;
+    }
+    
+    .upload-section {
+        padding: 15px;
+    }
+}
+
+/* Loading states */
+.astro-loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.astro-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #0073aa;
+    border-radius: 50%;
+    animation: astro-spin 1s linear infinite;
+}
+
+@keyframes astro-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Notices */
+.notice.astro-notice {
+    border-left-width: 4px;
+    border-left-style: solid;
+}
+
+.notice.astro-notice.notice-success {
+    border-left-color: #00a32a;
+}
+
+.notice.astro-notice.notice-error {
+    border-left-color: #d63638;
+}
+
+.notice.astro-notice.notice-warning {
+    border-left-color: #dba617;
+}
+
+.notice.astro-notice.notice-info {
+    border-left-color: #72aee6;
+}
+
+/* === SYSTÈME D'AUTOCOMPLÉTION POUR LES OBJETS CÉLESTES === */
+
+/* Container pour l'autocomplétion */
+.object-autocomplete-container {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+/* Suggestions d'autocomplétion */
+.object-autocomplete-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 9999;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.suggestion-item {
+    padding: 12px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.suggestion-item:hover,
+.suggestion-item.active {
+    background-color: #f0f6fc;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item strong {
+    color: #0073aa;
+    font-weight: 600;
+}
+
+.suggestion-item .alternates {
+    color: #666;
+    font-size: 0.9em;
+    margin-left: 5px;
+}
+
+.suggestion-item .common-name {
+    color: #d63384;
+    font-style: italic;
+    margin-left: 8px;
+    font-size: 0.9em;
+}
+
+/* Références croisées */
+.object-cross-references {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+}
+
+.cross-references-content h4 {
+    margin: 0 0 12px 0;
+    color: #495057;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.cross-references-content p {
+    margin: 8px 0;
+    line-height: 1.5;
+}
+
+.cross-references-content strong {
+    color: #212529;
+    font-weight: 600;
+}
+
+/* Badges pour les noms */
+.primary-name {
+    background: #0073aa;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.alt-name {
+    background: #6c757d;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.85em;
+    margin-right: 4px;
+    white-space: nowrap;
+}
+
+.common-name {
+    background: #d63384;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.9em;
+    font-style: normal;
+}
+
+.catalog-badge {
+    background: #198754;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.8em;
+    margin-right: 3px;
+    font-weight: 500;
+}
+
+/* Animation pour l'apparition des suggestions */
+.object-autocomplete-suggestions {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.object-autocomplete-suggestions:not([style*="display: none"]) {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Responsive pour mobile */
+@media (max-width: 768px) {
+    .object-autocomplete-suggestions {
+        max-height: 200px;
+    }
+    
+    .suggestion-item {
+        padding: 10px 12px;
+    }
+    
+    .cross-references-content {
+        font-size: 0.9em;
+    }
+    
+    .catalog-badge,
+    .alt-name,
+    .primary-name,
+    .common-name {
+        font-size: 0.8em;
+    }
+}
